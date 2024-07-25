@@ -1,0 +1,4 @@
+.DS_Store
+application/cache/
+application/config/config.php
+!application/cache/index.html

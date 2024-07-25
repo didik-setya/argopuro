@@ -4,10 +4,11 @@ require './assets/phpspreadsheet/vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Xlsx;
+// use PhpOffice\PhpSpreadsheet\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Color;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class Export extends CI_Controller
 {
@@ -2956,26 +2957,18 @@ class Export extends CI_Controller
 
         $last_year = date('Y', strtotime('-1 year'));
         $this_year = date('Y');
-        $reader = IOFactory::createReader('Xlsx');
-        $excel = $reader->load('./assets/excel/excel_evaluasi_belum_shgb.xlsx');
 
         $d_home_ly = $this->laporan->get_tanah_belum_shgb($last_year, $proyek, $peralihan, 'belum')->result();
         $d_home_ty = $this->laporan->get_tanah_belum_shgb($this_year, $proyek, $peralihan, 'belum')->result();
         $d_proses_ly = $this->laporan->get_tanah_belum_shgb($last_year, $proyek, $peralihan, 'proses')->result();
         $d_proses_ty = $this->laporan->get_tanah_belum_shgb($this_year, $proyek, $peralihan, 'proses')->result();
 
+        $data_home_last_year = '';
+        $data_home_this_year = '';
+        $data_proses_last_year = '';
+        $data_proses_this_year = '';
+        $no = 1;
 
-
-        //home last year
-        $start_home_1 = 6;
-        $no_h1 = 1;
-
-        $excel->getActiveSheet()->insertNewRowBefore(6, 1);
-        $excel->getActiveSheet()->mergeCells('A5:AM5');
-        $excel->getActiveSheet()->getStyle('A5:AM5')->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-        $excel->getActiveSheet()->setCellValue('A5', "s/d Tahun $last_year");
-        $excel->getActiveSheet()->getStyle('A5')->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('b0ac2c');
-        $excel->getActiveSheet()->getStyle('A5')->getFont()->getColor()->setARGB(Color::COLOR_WHITE);
         foreach ($d_home_ly as $d) {
             $getsertif1 = $this->db->get_where('master_sertifikat_tanah', ['id' => $d->status_surat_tanah1])->row();
             $getsertif2 = $this->db->get_where('master_sertifikat_tanah', ['id' => $d->status_surat_tanah2])->row();
@@ -2998,93 +2991,75 @@ class Export extends CI_Controller
             $harga_per_meter = $total_all / $d->luas_ukur;
 
 
+            $c = date_create($d->created_at);
+            $tgl_bo = '-';
+            $tgl_ord = '-';
+            $tgl_tbt = '-';
             if ($d->status_pengalihan == 'belum order') {
-                $tgl_bo = $d->created_at;
-                $tgl_ord = '-';
-                $tgl_tbr = '-';
+                $tgl_bo = date_format($c, 'd M Y');
             } else if ($d->status_pengalihan == 'order') {
-                $tgl_bo = '-';
-                $tgl_ord = $d->tgl_status_pengalihan;
-                $tgl_tbr = '-';
+                $tgl_ord = tgl_indo($d->tgl_status_pengalihan);
             } else if ($d->status_pengalihan == 'terbit') {
-                $tgl_bo = '-';
-                $tgl_ord = '-';
-                $tgl_tbr = $d->tgl_status_pengalihan;
-            } else {
-                $tgl_bo = '-';
-                $tgl_ord = '-';
-                $tgl_tbr = '-';
+                $tgl_tbt = tgl_indo($d->tgl_status_pengalihan);
             }
 
+            $data_home_last_year .= '
+                <tr>
+                    <td>' . $no++ . '</td>
+                    <td>' . $d->nama_penjual . '</td>
+                    <td>' . $d->nama_proyek . ' (' . $d->nama_status . ')' . '</td>
+                    <td>' . tgl_indo($d->tgl_pembelian) . '</td>
+                    <td>' . $d->nomor_gambar . '</td>
 
-            // set to cell
-            $excel->getActiveSheet()->insertNewRowBefore($start_home_1 + 1, 1);
-            $excel->getActiveSheet()->setCellValue('A' . $start_home_1, "$no_h1")
-                ->setCellValue('B' . $start_home_1, "$d->nama_penjual")
-                ->setCellValue('C' . $start_home_1, "$d->nama_proyek ($d->nama_status)")
-                ->setCellValue('D' . $start_home_1, "$d->tgl_pembelian")
-                ->setCellValue('E' . $start_home_1, "$d->nomor_gambar")
+                    <td>' . $d->nama_surat_tanah1 . '</td>
+                    <td>' . $sertif1 . '</td>
+                    <td>' . $d->keterangan1 . '</td>
 
-                ->setCellValue('F' . $start_home_1, "$d->nama_surat_tanah1")
-                ->setCellValue('G' . $start_home_1, "$sertif1")
-                ->setCellValue('H' . $start_home_1, "$d->keterangan1")
+                    <td>' . $d->nama_surat_tanah2 . '</td>
+                    <td>' . $sertif2 . '</td>
+                    <td>' . $d->keterangan2 . '</td>
 
-                ->setCellValue('I' . $start_home_1, "$d->nama_surat_tanah2")
-                ->setCellValue('J' . $start_home_1, "$sertif2")
-                ->setCellValue('K' . $start_home_1, "$d->keterangan2")
+                    <td>' . $d->luas_surat . '</td>
+                    <td>' . $d->luas_ukur . '</td>
 
-                ->setCellValue('L' . $start_home_1, "$d->luas_surat")
-                ->setCellValue('M' . $start_home_1, "$d->luas_ukur")
+                    <td>' . $d->nomor_pbb . '</td>
+                    <td>' . $d->atas_nama_pbb . '</td>
+                    <td>' . $d->luas_bangunan_pbb . '</td>
+                    <td>Rp. ' . number_format($d->njop_bangunan) . '</td>
+                    <td>' . $d->luas_bumi_pbb . '</td>
+                    <td>Rp. ' . number_format($d->njop_bumi_pbb) . '</td>
 
-                ->setCellValue('N' . $start_home_1, "$d->nomor_pbb")
-                ->setCellValue('O' . $start_home_1, "$d->atas_nama_pbb")
-                ->setCellValue('P' . $start_home_1, "$d->luas_bangunan_pbb")
-                ->setCellValue('Q' . $start_home_1, "Rp. " . number_format($d->njop_bangunan))
-                ->setCellValue('R' . $start_home_1, "$d->luas_bumi_pbb")
-                ->setCellValue('S' . $start_home_1, "Rp. " . number_format($d->njop_bumi_pbb))
+                    <td>Rp. ' . number_format($satuan_pengalihan_hak) . '</td>
+                    <td>Rp. ' . number_format($d->total_harga_pengalihan) . '</td>
 
-                ->setCellValue('T' . $start_home_1, number_format($satuan_pengalihan_hak))
-                ->setCellValue('U' . $start_home_1, number_format($d->total_harga_pengalihan))
+                    <td>' . $d->nama_makelar . '</td>
+                    <td>Rp. ' . number_format($d->harga_jual_makelar) . '</td>
 
-                ->setCellValue('V' . $start_home_1, "$d->nama_makelar")
-                ->setCellValue('W' . $start_home_1, number_format($d->harga_jual_makelar))
+                    <td>' . $tgl_bo . '</td>
+                    <td>' . $tgl_ord . '</td>
+                    <td>' . $tgl_tbt . '</td>
+                    <td>' . $d->nama_pengalihan . '</td>
+                    <td>' . tgl_indo($d->tgl_akta_pengalihan) . '</td>
+                    <td>' . $d->no_akta_pengalihan . '</td>
+                    <td>' . $d->atas_nama_pengalihan . '</td>
+                    
+                    <td>Rp. ' . number_format($d->biaya_lain_pematangan) . '</td>
+                    <td>Rp. ' . number_format($d->biaya_lain_rugi) . '</td>
+                    <td>Rp. ' . number_format($d->biaya_lain_pbb) . '</td>
+                    <td>Rp. ' . number_format($d->biaya_lain) . '</td>
+                    <td>Rp. ' . number_format($total_lain) . '</td>
 
-                ->setCellValue('X' . $start_home_1, "$tgl_bo")
-                ->setCellValue('Y' . $start_home_1, "$tgl_ord")
-                ->setCellValue('Z' . $start_home_1, "$tgl_tbr")
-                ->setCellValue('AA' . $start_home_1, "$d->nama_pengalihan")
-                ->setCellValue('AB' . $start_home_1, "$d->tgl_akta_pengalihan")
-                ->setCellValue('AC' . $start_home_1, "$d->no_akta_pengalihan")
-                ->setCellValue('AD' . $start_home_1, "$d->atas_nama_pengalihan")
+                    <td>Rp. ' . number_format($total_all) . '</td>
+                    <td>Rp. ' . number_format($harga_per_meter) . '</td>
+                    <td>' . tgl_indo($d->serah_terima_finance) . '</td>
+                    <td>' . $d->status_teknik . '</td>
+                    <td>' . $d->ket . '</td>
 
-                ->setCellValue('AE' . $start_home_1, number_format($d->biaya_lain_pematangan))
-                ->setCellValue('AF' . $start_home_1, number_format($d->biaya_lain_rugi))
-                ->setCellValue('AG' . $start_home_1, number_format($d->biaya_lain_pbb))
-                ->setCellValue('AH' . $start_home_1, number_format($d->biaya_lain))
-                ->setCellValue('AI' . $start_home_1, number_format($total_lain))
-
-                ->setCellValue('AJ' . $start_home_1, number_format($total_all))
-                ->setCellValue('AK' . $start_home_1, number_format($harga_per_meter))
-                ->setCellValue('AL' . $start_home_1, "$d->serah_terima_finance")
-                ->setCellValue('AM' . $start_home_1, "$d->ket");
-
-            $excel->getActiveSheet()->getStyle('A' . $start_home_1 . ':AM' . $start_home_1 . '')->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-            $start_home_1++;
-            $no_h1++;
+                </tr>
+            ';
         }
 
-        //home this year
-        $count_homely = count($d_home_ly);
-        $start_header_h2 = $start_home_1 + $count_homely + 1;
-        $start_home_2 = $start_header_h2 + 1;
-        $no_h2 = 1;
-        $excel->getActiveSheet()->insertNewRowBefore($start_header_h2 + 1, 1);
-        $excel->getActiveSheet()->mergeCells('A' . $start_header_h2 . ':AM' . $start_header_h2 . '');
-        $excel->getActiveSheet()->getStyle('A' . $start_header_h2 . ':AM' . $start_header_h2 . '')->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
 
-        $excel->getActiveSheet()->setCellValue('A' . $start_header_h2, "Tahun $this_year");
-        $excel->getActiveSheet()->getStyle('A' . $start_header_h2 . ':AM' . $start_header_h2)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('b0ac2c');
-        $excel->getActiveSheet()->getStyle('A' . $start_header_h2 . ':AM' . $start_header_h2)->getFont()->getColor()->setARGB(Color::COLOR_WHITE);
         foreach ($d_home_ty as $d) {
             $getsertif1 = $this->db->get_where('master_sertifikat_tanah', ['id' => $d->status_surat_tanah1])->row();
             $getsertif2 = $this->db->get_where('master_sertifikat_tanah', ['id' => $d->status_surat_tanah2])->row();
@@ -3107,95 +3082,74 @@ class Export extends CI_Controller
             $harga_per_meter = $total_all / $d->luas_ukur;
 
 
+            $c = date_create($d->created_at);
+            $tgl_bo = '-';
+            $tgl_ord = '-';
+            $tgl_tbt = '-';
             if ($d->status_pengalihan == 'belum order') {
-                $tgl_bo = $d->created_at;
-                $tgl_ord = '-';
-                $tgl_tbr = '-';
+                $tgl_bo = date_format($c, 'd M Y');
             } else if ($d->status_pengalihan == 'order') {
-                $tgl_bo = '-';
-                $tgl_ord = $d->tgl_status_pengalihan;
-                $tgl_tbr = '-';
+                $tgl_ord = tgl_indo($d->tgl_status_pengalihan);
             } else if ($d->status_pengalihan == 'terbit') {
-                $tgl_bo = '-';
-                $tgl_ord = '-';
-                $tgl_tbr = $d->tgl_status_pengalihan;
-            } else {
-                $tgl_bo = '-';
-                $tgl_ord = '-';
-                $tgl_tbr = '-';
+                $tgl_tbt = tgl_indo($d->tgl_status_pengalihan);
             }
 
+            $data_home_this_year .= '
+                <tr>
+                    <td>' . $no++ . '</td>
+                    <td>' . $d->nama_penjual . '</td>
+                    <td>' . $d->nama_proyek . ' (' . $d->nama_status . ')' . '</td>
+                    <td>' . tgl_indo($d->tgl_pembelian) . '</td>
+                    <td>' . $d->nomor_gambar . '</td>
 
-            // set to cell
-            $excel->getActiveSheet()->insertNewRowBefore($start_home_2 + 1, 1);
-            $excel->getActiveSheet()->setCellValue('A' . $start_home_2, "$no_h2")
-                ->setCellValue('B' . $start_home_2, "$d->nama_penjual")
-                ->setCellValue('C' . $start_home_2, "$d->nama_proyek ($d->nama_status)")
-                ->setCellValue('D' . $start_home_2, "$d->tgl_pembelian")
-                ->setCellValue('E' . $start_home_2, "$d->nomor_gambar")
+                    <td>' . $d->nama_surat_tanah1 . '</td>
+                    <td>' . $sertif1 . '</td>
+                    <td>' . $d->keterangan1 . '</td>
 
-                ->setCellValue('F' . $start_home_2, "$d->nama_surat_tanah1")
-                ->setCellValue('G' . $start_home_2, "$sertif1")
-                ->setCellValue('H' . $start_home_2, "$d->keterangan1")
+                    <td>' . $d->nama_surat_tanah2 . '</td>
+                    <td>' . $sertif2 . '</td>
+                    <td>' . $d->keterangan2 . '</td>
 
-                ->setCellValue('I' . $start_home_2, "$d->nama_surat_tanah2")
-                ->setCellValue('J' . $start_home_2, "$sertif2")
-                ->setCellValue('K' . $start_home_2, "$d->keterangan2")
+                    <td>' . $d->luas_surat . '</td>
+                    <td>' . $d->luas_ukur . '</td>
 
-                ->setCellValue('L' . $start_home_2, "$d->luas_surat")
-                ->setCellValue('M' . $start_home_2, "$d->luas_ukur")
+                    <td>' . $d->nomor_pbb . '</td>
+                    <td>' . $d->atas_nama_pbb . '</td>
+                    <td>' . $d->luas_bangunan_pbb . '</td>
+                    <td>Rp. ' . number_format($d->njop_bangunan) . '</td>
+                    <td>' . $d->luas_bumi_pbb . '</td>
+                    <td>Rp. ' . number_format($d->njop_bumi_pbb) . '</td>
 
-                ->setCellValue('N' . $start_home_2, "$d->nomor_pbb")
-                ->setCellValue('O' . $start_home_2, "$d->atas_nama_pbb")
-                ->setCellValue('P' . $start_home_2, "$d->luas_bangunan_pbb")
-                ->setCellValue('Q' . $start_home_2, "Rp. " . number_format($d->njop_bangunan))
-                ->setCellValue('R' . $start_home_2, "$d->luas_bumi_pbb")
-                ->setCellValue('S' . $start_home_2, "Rp. " . number_format($d->njop_bumi_pbb))
+                    <td>Rp. ' . number_format($satuan_pengalihan_hak) . '</td>
+                    <td>Rp. ' . number_format($d->total_harga_pengalihan) . '</td>
 
-                ->setCellValue('T' . $start_home_2, number_format($satuan_pengalihan_hak))
-                ->setCellValue('U' . $start_home_2, number_format($d->total_harga_pengalihan))
+                    <td>' . $d->nama_makelar . '</td>
+                    <td>Rp. ' . number_format($d->harga_jual_makelar) . '</td>
 
-                ->setCellValue('V' . $start_home_2, "$d->nama_makelar")
-                ->setCellValue('W' . $start_home_2, number_format($d->harga_jual_makelar))
+                    <td>' . $tgl_bo . '</td>
+                    <td>' . $tgl_ord . '</td>
+                    <td>' . $tgl_tbt . '</td>
+                    <td>' . $d->nama_pengalihan . '</td>
+                    <td>' . tgl_indo($d->tgl_akta_pengalihan) . '</td>
+                    <td>' . $d->no_akta_pengalihan . '</td>
+                    <td>' . $d->atas_nama_pengalihan . '</td>
+                    
+                    <td>Rp. ' . number_format($d->biaya_lain_pematangan) . '</td>
+                    <td>Rp. ' . number_format($d->biaya_lain_rugi) . '</td>
+                    <td>Rp. ' . number_format($d->biaya_lain_pbb) . '</td>
+                    <td>Rp. ' . number_format($d->biaya_lain) . '</td>
+                    <td>Rp. ' . number_format($total_lain) . '</td>
 
-                ->setCellValue('X' . $start_home_2, "$tgl_bo")
-                ->setCellValue('Y' . $start_home_2, "$tgl_ord")
-                ->setCellValue('Z' . $start_home_2, "$tgl_tbr")
-                ->setCellValue('AA' . $start_home_2, "$d->nama_pengalihan")
-                ->setCellValue('AB' . $start_home_2, "$d->tgl_akta_pengalihan")
-                ->setCellValue('AC' . $start_home_2, "$d->no_akta_pengalihan")
-                ->setCellValue('AD' . $start_home_2, "$d->atas_nama_pengalihan")
+                    <td>Rp. ' . number_format($total_all) . '</td>
+                    <td>Rp. ' . number_format($harga_per_meter) . '</td>
+                    <td>' . tgl_indo($d->serah_terima_finance) . '</td>
+                    <td>' . $d->status_teknik . '</td>
+                    <td>' . $d->ket . '</td>
 
-                ->setCellValue('AE' . $start_home_2, number_format($d->biaya_lain_pematangan))
-                ->setCellValue('AF' . $start_home_2, number_format($d->biaya_lain_rugi))
-                ->setCellValue('AG' . $start_home_2, number_format($d->biaya_lain_pbb))
-                ->setCellValue('AH' . $start_home_2, number_format($d->biaya_lain))
-                ->setCellValue('AI' . $start_home_2, number_format($total_lain))
-
-                ->setCellValue('AJ' . $start_home_2, number_format($total_all))
-                ->setCellValue('AK' . $start_home_2, number_format($harga_per_meter))
-                ->setCellValue('AL' . $start_home_2, "$d->serah_terima_finance")
-                ->setCellValue('AM' . $start_home_2, "$d->ket");
-
-            $excel->getActiveSheet()->getStyle('A' . $start_home_2 . ':AM' . $start_home_2 . '')->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-            $start_home_2++;
-            $no_h2++;
+                </tr>
+            ';
         }
 
-
-        //proses shgb last year
-        $count_homety = count($d_home_ty);
-        $start_header_p1 = $start_home_2 + $count_homety + 2;
-        $start_p1 = $start_header_p1 + 1;
-        $no_p1 = 1;
-        $excel->getActiveSheet()->insertNewRowBefore($start_header_p1 + 1, 1);
-
-        $excel->getActiveSheet()->mergeCells('A' . $start_header_p1 . ':AM' . $start_header_p1 . '');
-        $excel->getActiveSheet()->getStyle('A' . $start_header_p1 . ':AM' . $start_header_p1 . '')->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-
-        $excel->getActiveSheet()->setCellValue('A' . $start_header_p1, "s/d Tahun $last_year");
-        $excel->getActiveSheet()->getStyle('A' . $start_header_p1 . ':AM' . $start_header_p1)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('b0ac2c');
-        $excel->getActiveSheet()->getStyle('A' . $start_header_p1 . ':AM' . $start_header_p1)->getFont()->getColor()->setARGB(Color::COLOR_WHITE);
         foreach ($d_proses_ly as $d) {
             $getsertif1 = $this->db->get_where('master_sertifikat_tanah', ['id' => $d->status_surat_tanah1])->row();
             $getsertif2 = $this->db->get_where('master_sertifikat_tanah', ['id' => $d->status_surat_tanah2])->row();
@@ -3218,96 +3172,74 @@ class Export extends CI_Controller
             $harga_per_meter = $total_all / $d->luas_ukur;
 
 
+            $c = date_create($d->created_at);
+            $tgl_bo = '-';
+            $tgl_ord = '-';
+            $tgl_tbt = '-';
             if ($d->status_pengalihan == 'belum order') {
-                $tgl_bo = $d->created_at;
-                $tgl_ord = '-';
-                $tgl_tbr = '-';
+                $tgl_bo = date_format($c, 'd M Y');
             } else if ($d->status_pengalihan == 'order') {
-                $tgl_bo = '-';
-                $tgl_ord = $d->tgl_status_pengalihan;
-                $tgl_tbr = '-';
+                $tgl_ord = tgl_indo($d->tgl_status_pengalihan);
             } else if ($d->status_pengalihan == 'terbit') {
-                $tgl_bo = '-';
-                $tgl_ord = '-';
-                $tgl_tbr = $d->tgl_status_pengalihan;
-            } else {
-                $tgl_bo = '-';
-                $tgl_ord = '-';
-                $tgl_tbr = '-';
+                $tgl_tbt = tgl_indo($d->tgl_status_pengalihan);
             }
 
+            $data_proses_last_year .= '
+                <tr>
+                    <td>' . $no++ . '</td>
+                    <td>' . $d->nama_penjual . '</td>
+                    <td>' . $d->nama_proyek . ' (' . $d->nama_status . ')' . '</td>
+                    <td>' . tgl_indo($d->tgl_pembelian) . '</td>
+                    <td>' . $d->nomor_gambar . '</td>
 
-            // set to cell
-            $excel->getActiveSheet()->insertNewRowBefore($start_p1 + 1, 1);
-            $excel->getActiveSheet()->setCellValue('A' . $start_p1, "$no_p1")
-                ->setCellValue('B' . $start_p1, "$d->nama_penjual")
-                ->setCellValue('C' . $start_p1, "$d->nama_proyek ($d->nama_status)")
-                ->setCellValue('D' . $start_p1, "$d->tgl_pembelian")
-                ->setCellValue('E' . $start_p1, "$d->nomor_gambar")
+                    <td>' . $d->nama_surat_tanah1 . '</td>
+                    <td>' . $sertif1 . '</td>
+                    <td>' . $d->keterangan1 . '</td>
 
-                ->setCellValue('F' . $start_p1, "$d->nama_surat_tanah1")
-                ->setCellValue('G' . $start_p1, "$sertif1")
-                ->setCellValue('H' . $start_p1, "$d->keterangan1")
+                    <td>' . $d->nama_surat_tanah2 . '</td>
+                    <td>' . $sertif2 . '</td>
+                    <td>' . $d->keterangan2 . '</td>
 
-                ->setCellValue('I' . $start_p1, "$d->nama_surat_tanah2")
-                ->setCellValue('J' . $start_p1, "$sertif2")
-                ->setCellValue('K' . $start_p1, "$d->keterangan2")
+                    <td>' . $d->luas_surat . '</td>
+                    <td>' . $d->luas_ukur . '</td>
 
-                ->setCellValue('L' . $start_p1, "$d->luas_surat")
-                ->setCellValue('M' . $start_p1, "$d->luas_ukur")
+                    <td>' . $d->nomor_pbb . '</td>
+                    <td>' . $d->atas_nama_pbb . '</td>
+                    <td>' . $d->luas_bangunan_pbb . '</td>
+                    <td>Rp. ' . number_format($d->njop_bangunan) . '</td>
+                    <td>' . $d->luas_bumi_pbb . '</td>
+                    <td>Rp. ' . number_format($d->njop_bumi_pbb) . '</td>
 
-                ->setCellValue('N' . $start_p1, "$d->nomor_pbb")
-                ->setCellValue('O' . $start_p1, "$d->atas_nama_pbb")
-                ->setCellValue('P' . $start_p1, "$d->luas_bangunan_pbb")
-                ->setCellValue('Q' . $start_p1, "Rp. " . number_format($d->njop_bangunan))
-                ->setCellValue('R' . $start_p1, "$d->luas_bumi_pbb")
-                ->setCellValue('S' . $start_p1, "Rp. " . number_format($d->njop_bumi_pbb))
+                    <td>Rp. ' . number_format($satuan_pengalihan_hak) . '</td>
+                    <td>Rp. ' . number_format($d->total_harga_pengalihan) . '</td>
 
-                ->setCellValue('T' . $start_p1, number_format($satuan_pengalihan_hak))
-                ->setCellValue('U' . $start_p1, number_format($d->total_harga_pengalihan))
+                    <td>' . $d->nama_makelar . '</td>
+                    <td>Rp. ' . number_format($d->harga_jual_makelar) . '</td>
 
-                ->setCellValue('V' . $start_p1, "$d->nama_makelar")
-                ->setCellValue('W' . $start_p1, number_format($d->harga_jual_makelar))
+                    <td>' . $tgl_bo . '</td>
+                    <td>' . $tgl_ord . '</td>
+                    <td>' . $tgl_tbt . '</td>
+                    <td>' . $d->nama_pengalihan . '</td>
+                    <td>' . tgl_indo($d->tgl_akta_pengalihan) . '</td>
+                    <td>' . $d->no_akta_pengalihan . '</td>
+                    <td>' . $d->atas_nama_pengalihan . '</td>
+                    
+                    <td>Rp. ' . number_format($d->biaya_lain_pematangan) . '</td>
+                    <td>Rp. ' . number_format($d->biaya_lain_rugi) . '</td>
+                    <td>Rp. ' . number_format($d->biaya_lain_pbb) . '</td>
+                    <td>Rp. ' . number_format($d->biaya_lain) . '</td>
+                    <td>Rp. ' . number_format($total_lain) . '</td>
 
-                ->setCellValue('X' . $start_p1, "$tgl_bo")
-                ->setCellValue('Y' . $start_p1, "$tgl_ord")
-                ->setCellValue('Z' . $start_p1, "$tgl_tbr")
-                ->setCellValue('AA' . $start_p1, "$d->nama_pengalihan")
-                ->setCellValue('AB' . $start_p1, "$d->tgl_akta_pengalihan")
-                ->setCellValue('AC' . $start_p1, "$d->no_akta_pengalihan")
-                ->setCellValue('AD' . $start_p1, "$d->atas_nama_pengalihan")
+                    <td>Rp. ' . number_format($total_all) . '</td>
+                    <td>Rp. ' . number_format($harga_per_meter) . '</td>
+                    <td>' . tgl_indo($d->serah_terima_finance) . '</td>
+                    <td>' . $d->status_teknik . '</td>
+                    <td>' . $d->ket . '</td>
 
-                ->setCellValue('AE' . $start_p1, number_format($d->biaya_lain_pematangan))
-                ->setCellValue('AF' . $start_p1, number_format($d->biaya_lain_rugi))
-                ->setCellValue('AG' . $start_p1, number_format($d->biaya_lain_pbb))
-                ->setCellValue('AH' . $start_p1, number_format($d->biaya_lain))
-                ->setCellValue('AI' . $start_p1, number_format($total_lain))
-
-                ->setCellValue('AJ' . $start_p1, number_format($total_all))
-                ->setCellValue('AK' . $start_p1, number_format($harga_per_meter))
-                ->setCellValue('AL' . $start_p1, "$d->serah_terima_finance")
-                ->setCellValue('AM' . $start_p1, "$d->ket");
-
-            $excel->getActiveSheet()->getStyle('A' . $start_p1 . ':AM' . $start_p1 . '')->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-            $start_p1++;
-            $no_p1++;
+                </tr>
+            ';
         }
 
-
-        // //proses shgb this year
-        $count_ply = count($d_proses_ly);
-        $start_header_p2 = $start_header_p1 + $count_ply + 1;
-
-        $start_p2 = $start_header_p2 + 1;
-        $no_p2 = 1;
-        $excel->getActiveSheet()->insertNewRowBefore($start_header_p2 + 1, 1);
-
-        $excel->getActiveSheet()->mergeCells('A' . $start_header_p2 . ':AM' . $start_header_p2 . '');
-        $excel->getActiveSheet()->getStyle('A' . $start_header_p2 . ':AM' . $start_header_p2 . '')->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-
-        $excel->getActiveSheet()->setCellValue('A' . $start_header_p2, "Tahun $this_year");
-        $excel->getActiveSheet()->getStyle('A' . $start_header_p2 . ':AM' . $start_header_p2)->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setARGB('b0ac2c');
-        $excel->getActiveSheet()->getStyle('A' . $start_header_p2 . ':AM' . $start_header_p2)->getFont()->getColor()->setARGB(Color::COLOR_WHITE);
         foreach ($d_proses_ty as $d) {
             $getsertif1 = $this->db->get_where('master_sertifikat_tanah', ['id' => $d->status_surat_tanah1])->row();
             $getsertif2 = $this->db->get_where('master_sertifikat_tanah', ['id' => $d->status_surat_tanah2])->row();
@@ -3330,83 +3262,272 @@ class Export extends CI_Controller
             $harga_per_meter = $total_all / $d->luas_ukur;
 
 
+            $c = date_create($d->created_at);
+            $tgl_bo = '-';
+            $tgl_ord = '-';
+            $tgl_tbt = '-';
             if ($d->status_pengalihan == 'belum order') {
-                $tgl_bo = $d->created_at;
-                $tgl_ord = '-';
-                $tgl_tbr = '-';
+                $tgl_bo = date_format($c, 'd M Y');
             } else if ($d->status_pengalihan == 'order') {
-                $tgl_bo = '-';
-                $tgl_ord = $d->tgl_status_pengalihan;
-                $tgl_tbr = '-';
+                $tgl_ord = tgl_indo($d->tgl_status_pengalihan);
             } else if ($d->status_pengalihan == 'terbit') {
-                $tgl_bo = '-';
-                $tgl_ord = '-';
-                $tgl_tbr = $d->tgl_status_pengalihan;
-            } else {
-                $tgl_bo = '-';
-                $tgl_ord = '-';
-                $tgl_tbr = '-';
+                $tgl_tbt = tgl_indo($d->tgl_status_pengalihan);
             }
 
+            $data_proses_this_year .= '
+                <tr>
+                    <td>' . $no++ . '</td>
+                    <td>' . $d->nama_penjual . '</td>
+                    <td>' . $d->nama_proyek . ' (' . $d->nama_status . ')' . '</td>
+                    <td>' . tgl_indo($d->tgl_pembelian) . '</td>
+                    <td>' . $d->nomor_gambar . '</td>
 
-            // set to cell
-            $excel->getActiveSheet()->insertNewRowBefore($start_p2 + 1, 1);
-            $excel->getActiveSheet()->setCellValue('A' . $start_p2, "$no_p2")
-                ->setCellValue('B' . $start_p2, "$d->nama_penjual")
-                ->setCellValue('C' . $start_p2, "$d->nama_proyek ($d->nama_status)")
-                ->setCellValue('D' . $start_p2, "$d->tgl_pembelian")
-                ->setCellValue('E' . $start_p2, "$d->nomor_gambar")
+                    <td>' . $d->nama_surat_tanah1 . '</td>
+                    <td>' . $sertif1 . '</td>
+                    <td>' . $d->keterangan1 . '</td>
 
-                ->setCellValue('F' . $start_p2, "$d->nama_surat_tanah1")
-                ->setCellValue('G' . $start_p2, "$sertif1")
-                ->setCellValue('H' . $start_p2, "$d->keterangan1")
+                    <td>' . $d->nama_surat_tanah2 . '</td>
+                    <td>' . $sertif2 . '</td>
+                    <td>' . $d->keterangan2 . '</td>
 
-                ->setCellValue('I' . $start_p2, "$d->nama_surat_tanah2")
-                ->setCellValue('J' . $start_p2, "$sertif2")
-                ->setCellValue('K' . $start_p2, "$d->keterangan2")
+                    <td>' . $d->luas_surat . '</td>
+                    <td>' . $d->luas_ukur . '</td>
 
-                ->setCellValue('L' . $start_p2, "$d->luas_surat")
-                ->setCellValue('M' . $start_p2, "$d->luas_ukur")
+                    <td>' . $d->nomor_pbb . '</td>
+                    <td>' . $d->atas_nama_pbb . '</td>
+                    <td>' . $d->luas_bangunan_pbb . '</td>
+                    <td>Rp. ' . number_format($d->njop_bangunan) . '</td>
+                    <td>' . $d->luas_bumi_pbb . '</td>
+                    <td>Rp. ' . number_format($d->njop_bumi_pbb) . '</td>
 
-                ->setCellValue('N' . $start_p2, "$d->nomor_pbb")
-                ->setCellValue('O' . $start_p2, "$d->atas_nama_pbb")
-                ->setCellValue('P' . $start_p2, "$d->luas_bangunan_pbb")
-                ->setCellValue('Q' . $start_p2, "Rp. " . number_format($d->njop_bangunan))
-                ->setCellValue('R' . $start_p2, "$d->luas_bumi_pbb")
-                ->setCellValue('S' . $start_p2, "Rp. " . number_format($d->njop_bumi_pbb))
+                    <td>Rp. ' . number_format($satuan_pengalihan_hak) . '</td>
+                    <td>Rp. ' . number_format($d->total_harga_pengalihan) . '</td>
 
-                ->setCellValue('T' . $start_p2, number_format($satuan_pengalihan_hak))
-                ->setCellValue('U' . $start_p2, number_format($d->total_harga_pengalihan))
+                    <td>' . $d->nama_makelar . '</td>
+                    <td>Rp. ' . number_format($d->harga_jual_makelar) . '</td>
 
-                ->setCellValue('V' . $start_p2, "$d->nama_makelar")
-                ->setCellValue('W' . $start_p2, number_format($d->harga_jual_makelar))
+                    <td>' . $tgl_bo . '</td>
+                    <td>' . $tgl_ord . '</td>
+                    <td>' . $tgl_tbt . '</td>
+                    <td>' . $d->nama_pengalihan . '</td>
+                    <td>' . tgl_indo($d->tgl_akta_pengalihan) . '</td>
+                    <td>' . $d->no_akta_pengalihan . '</td>
+                    <td>' . $d->atas_nama_pengalihan . '</td>
+                    
+                    <td>Rp. ' . number_format($d->biaya_lain_pematangan) . '</td>
+                    <td>Rp. ' . number_format($d->biaya_lain_rugi) . '</td>
+                    <td>Rp. ' . number_format($d->biaya_lain_pbb) . '</td>
+                    <td>Rp. ' . number_format($d->biaya_lain) . '</td>
+                    <td>Rp. ' . number_format($total_lain) . '</td>
 
-                ->setCellValue('X' . $start_p2, "$tgl_bo")
-                ->setCellValue('Y' . $start_p2, "$tgl_ord")
-                ->setCellValue('Z' . $start_p2, "$tgl_tbr")
-                ->setCellValue('AA' . $start_p2, "$d->nama_pengalihan")
-                ->setCellValue('AB' . $start_p2, "$d->tgl_akta_pengalihan")
-                ->setCellValue('AC' . $start_p2, "$d->no_akta_pengalihan")
-                ->setCellValue('AD' . $start_p2, "$d->atas_nama_pengalihan")
+                    <td>Rp. ' . number_format($total_all) . '</td>
+                    <td>Rp. ' . number_format($harga_per_meter) . '</td>
+                    <td>' . tgl_indo($d->serah_terima_finance) . '</td>
+                    <td>' . $d->status_teknik . '</td>
+                    <td>' . $d->ket . '</td>
 
-                ->setCellValue('AE' . $start_p2, number_format($d->biaya_lain_pematangan))
-                ->setCellValue('AF' . $start_p2, number_format($d->biaya_lain_rugi))
-                ->setCellValue('AG' . $start_p2, number_format($d->biaya_lain_pbb))
-                ->setCellValue('AH' . $start_p2, number_format($d->biaya_lain))
-                ->setCellValue('AI' . $start_p2, number_format($total_lain))
-
-                ->setCellValue('AJ' . $start_p2, number_format($total_all))
-                ->setCellValue('AK' . $start_p2, number_format($harga_per_meter))
-                ->setCellValue('AL' . $start_p2, "$d->serah_terima_finance")
-                ->setCellValue('AM' . $start_p2, "$d->ket");
-
-            $excel->getActiveSheet()->getStyle('A' . $start_p2 . ':AM' . $start_p2 . '')->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
-            $start_p2++;
-            $no_p2++;
+                </tr>
+            ';
         }
 
 
-        $this->to_export($excel, '4. Evaluasi tanah belum SHGB.xlsx');
+        $test = '
+                <html xmlns:o="urn:schemas-microsoft-com:office:office"
+                xmlns:x="urn:schemas-microsoft-com:office:excel"
+                xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                <meta http-equiv=Content-Type content="text/html;
+                charset=windows-1252">
+                <meta name=ProgId content=Excel.Sheet>
+                <meta name=Generator content="Microsoft Excel 11">
+                <style>
+                <!--table
+                @page{}
+                -->
+                body{
+                        font-family: Calibri;
+                    }
+                </style>
+                <!--[if gte mso 9]><xml>
+                <x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>
+                <x:Name>Sheet1</x:Name>
+                <x:WorksheetOptions><x:Panes>
+                </x:Panes></x:WorksheetOptions>
+                </x:ExcelWorksheet></x:ExcelWorksheets></
+                x:ExcelWorkbook>
+                </xml>
+                <![endif]-->
+                </head>
+                <body>
+                <span style="font-size: 18px"><b>PT. GUNUNG BATU UTAMA</b></span>
+                <br>
+                <span style="font-size: 18px"><b>Evaluasi Tanah Belum SHGB</b></span>
+                <br>
+               
+                <table border="1">
+                    <tr>
+                        <th rowspan="2">#</th>
+                        <th rowspan="2">Nama Penjual</th>
+                        <th rowspan="2">Lokasi</th>
+                        <th rowspan="2">Tgl Pembelian</th>
+                        <th rowspan="2">No. Gambar</th>
+
+                        <th colspan="3">Data Surat Tanah 1</th>
+                        <th colspan="3">Data Surat Tanah 2</th>
+                        <th colspan="2">Luas (m<sup>2</sup>)</th>
+                        <th colspan="6">PBB</th>
+                        <th colspan="2">Harga Pengalihan Hak</th>
+                        <th colspan="2">Makelar</th>
+                        <th colspan="7">Pengalihan Hak</th>
+                        <th colspan="5">Biaya Lain-lain</th>
+
+                        <th rowspan="2">Total Harga</th>
+                        <th rowspan="2">Harga /meter<sup>2</sup></th>
+                        <th rowspan="2">Serah Terima Finance</th>
+                        <th rowspan="2">Status Teknik</th>
+                        <th rowspan="2">Ket</th>
+                    </tr>
+                    <tr>
+                        <td>Nama</td>
+                        <td>Surat</td>
+                        <td>No. Surat</td>
+
+                        <td>Nama</td>
+                        <td>Surat</td>
+                        <td>No. Surat</td>
+
+                        <td>Surat</td>
+                        <td>Ukur</td>
+
+                        <td>Nomor</td>
+                        <td>Atas Nama</td>
+                        <td>Luas Bangunan</td>
+                        <td>NJOP Bangunan</td>
+                        <td>Luas Bumi</td>
+                        <td>NJOP Bumi</td>
+
+                        <td>Satuan</td>
+                        <td>Total</td>
+
+                        <td>Nama</td>
+                        <td>Nilai</td>
+
+                        <td>Belum Order</td>
+                        <td>Order</td>
+                        <td>Terbit</td>
+                        <td>Jenis</td>
+                        <td>Tanggal</td>
+                        <td>Akte</td>
+                        <td>Nama</td>
+
+                        <td>Pematangan</td>
+                        <td>Ganti Rugi</td>
+                        <td>PBB</td>
+                        <td>Lain-lain</td>
+                        <td>Total</td>
+
+                    </tr>
+
+                    <tr>
+                        <td colspan="40">s/d Tahun ' . $last_year . '</td>
+                    </tr>
+                    ' . $data_home_last_year . '
+
+
+                    <tr>
+                        <td colspan="40">Tahun ' . $this_year . '</td>
+                    </tr>
+                    ' . $data_home_this_year . '
+                </table>
+
+
+                <br>
+                <span style="font-size: 18px"><b>Proses SHGB</b></span>
+                <br>
+
+                <table border="1">
+                    <tr>
+                        <th rowspan="2">#</th>
+                        <th rowspan="2">Nama Penjual</th>
+                        <th rowspan="2">Lokasi</th>
+                        <th rowspan="2">Tgl Pembelian</th>
+                        <th rowspan="2">No. Gambar</th>
+
+                        <th colspan="3">Data Surat Tanah 1</th>
+                        <th colspan="3">Data Surat Tanah 2</th>
+                        <th colspan="2">Luas (m<sup>2</sup>)</th>
+                        <th colspan="6">PBB</th>
+                        <th colspan="2">Harga Pengalihan Hak</th>
+                        <th colspan="2">Makelar</th>
+                        <th colspan="7">Pengalihan Hak</th>
+                        <th colspan="5">Biaya Lain-lain</th>
+
+                        <th rowspan="2">Total Harga</th>
+                        <th rowspan="2">Harga /meter<sup>2</sup></th>
+                        <th rowspan="2">Serah Terima Finance</th>
+                        <th rowspan="2">Status Teknik</th>
+                        <th rowspan="2">Ket</th>
+                    </tr>
+                     <tr>
+                        <td>Nama</td>
+                        <td>Surat</td>
+                        <td>No. Surat</td>
+
+                        <td>Nama</td>
+                        <td>Surat</td>
+                        <td>No. Surat</td>
+
+                        <td>Surat</td>
+                        <td>Ukur</td>
+
+                        <td>Nomor</td>
+                        <td>Atas Nama</td>
+                        <td>Luas Bangunan</td>
+                        <td>NJOP Bangunan</td>
+                        <td>Luas Bumi</td>
+                        <td>NJOP Bumi</td>
+
+                        <td>Satuan</td>
+                        <td>Total</td>
+
+                        <td>Nama</td>
+                        <td>Nilai</td>
+
+                        <td>Belum Order</td>
+                        <td>Order</td>
+                        <td>Terbit</td>
+                        <td>Jenis</td>
+                        <td>Tanggal</td>
+                        <td>Akte</td>
+                        <td>Nama</td>
+
+                        <td>Pematangan</td>
+                        <td>Ganti Rugi</td>
+                        <td>PBB</td>
+                        <td>Lain-lain</td>
+                        <td>Total</td>
+
+                    </tr>
+
+                     <tr>
+                        <td colspan="40">s/d Tahun ' . $last_year . '</td>
+                    </tr>
+                    ' . $data_proses_last_year . '
+                    <tr>
+                        <td colspan="40">Tahun ' . $this_year . '</td>
+                    </tr>
+                    ' . $data_proses_this_year . '
+
+                </table>
+
+                </body></html>
+                ';
+
+
+        $file = "4. Evaluasi Tanah Belum SHGB.xls";
+        header("Content-type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename=\"$file\"");
+        echo $test;
     }
 
     public function evaluasi_belum_shgb()
