@@ -1,0 +1,135 @@
+<?php
+$tanah_proyek = $this->db->get('master_proyek')->result();
+$f_proyek = $this->input->get('proyek');
+$f_status = $this->input->get('status');
+
+$last_year = date('Y', strtotime('-1 year'));
+$this_year = date('Y');
+
+$data = $this->laporan->get_data_shgb()->result();
+
+// $last_data = $this->laporan->get_data_shgb($f_proyek, $f_status, $last_year)->result();
+// $this_data = $this->laporan->get_data_shgb($f_proyek, $f_status, null, $this_year)->result();
+?>
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-12">
+                <h3>Evaluasi Proyek Sudah SHGB</h3>
+
+                <div class="card">
+                    <div class="card-body table-responsive">
+
+
+                        <table class="table table-bordered table-sm" id="table-shgb">
+                            <thead>
+                                <tr class="bg-dark text-light">
+                                    <th rowspan="3" style="text-align: center;vertical-align: middle;">NO</th>
+                                    <th rowspan="3" style="text-align: center;vertical-align: middle;">SHGB</th>
+                                    <th rowspan="2" colspan="2" style="text-align: center;vertical-align: middle;">DATA TANAH</th>
+                                    <th rowspan="3" style="text-align: center;vertical-align: middle;">BATAS WAKTU SHGB</th>
+                                    <th rowspan="3" style="text-align: center;vertical-align: middle;">POSISI SURAT</th>
+                                    <th rowspan="3" style="text-align: center;vertical-align: middle;">JML SHGB</th>
+                                    <th colspan="4" style="text-align: center;vertical-align: middle;">PROSES SPLIT</th>
+                                    <th colspan="2" style="text-align: center;vertical-align: middle;">PROSES GABUNG</th>
+                                    <th rowspan="3" style="text-align: center;vertical-align: middle;">TERBIT PROSES</th>
+                                    <th colspan="2" rowspan="2" style="text-align: center;vertical-align: middle;">SISA SETELAH TERBIT</th>
+                                    <th rowspan="3" style="text-align: center;vertical-align: middle;">KETERANGAN</th>
+                                </tr>
+                                <tr class="bg-primary text-light">
+                                    <th rowspan="2" style="text-align: center;vertical-align: middle;">JML SHGB</th>
+                                    <th colspan="3" style="text-align: center;vertical-align: middle;">LUAS</th>
+                                    <th rowspan="2" style="text-align: center;vertical-align: middle;">JML SHGB</th>
+                                    <th rowspan="2" style="text-align: center;vertical-align: middle;">LUAS</th>
+                                </tr>
+                                <tr>
+                                    <th style="text-align: center;vertical-align: middle;">ATAS NAMA</th>
+                                    <th style="text-align: center;vertical-align: middle;"> LUAS</th>
+                                    <th style="text-align: center;vertical-align: middle;">SHGB</th>
+                                    <th style="text-align: center;vertical-align: middle;"> PROSES </th>
+                                    <th style="text-align: center;vertical-align: middle;">TERBIT</th>
+                                    <th style="text-align: center;vertical-align: middle;">JML</th>
+                                    <th style="text-align: center;vertical-align: middle;">LUAS</th>
+                                </tr>
+                            </thead>
+
+
+                            <tbody>
+                                <?php $i = 1;
+                                foreach ($data as $d) { ?>
+                                    <tr>
+                                        <td><?= $i++ ?></td>
+                                        <td><?= $d->no_terbit_shgb ?></td>
+                                        <td>PT. GBU</td>
+                                        <td><?= $d->luas_terbit ?></td>
+                                        <td><?= tgl_indo($d->tgl_terbit_shgb) ?></td>
+                                        <td></td>
+                                        <td>1</td>
+
+                                        <?php if ($d->status_induk == 'terbit') {
+                                            $data_splitsing = $this->laporan->get_data_split_7($d->id);
+                                            if ($data_splitsing->num_rows() <= 0) {
+                                        ?>
+                                                <td>-</td>
+                                                <td>-</td>
+                                                <td>-</td>
+                                                <td>-</td>
+                                            <?php } else {
+                                                $data_spl = $data_splitsing->row();
+                                                if ($data_spl->status == 'proses') {
+                                                    $split_proses = $data_spl->total_luas_splitsing;
+                                                    $split_terbit = '-';
+                                                } else if ($data_spl->status == 'terbit') {
+                                                    $split_proses = $data_spl->total_luas_splitsing;
+                                                    $split_terbit = $data_spl->total_luas_splitsing;
+                                                } else {
+                                                    $split_proses = '-';
+                                                    $split_terbit = '-';
+                                                }
+                                            ?>
+                                                <td><?= $data_splitsing->num_rows() ?></td>
+                                                <td><?= $d->luas_terbit ?></td>
+                                                <td><?= $split_proses ?></td>
+                                                <td><?= $split_terbit ?></td>
+                                            <?php }
+                                        } else { ?>
+                                            <td>-</td>
+                                            <td>-</td>
+                                            <td>-</td>
+                                            <td>-</td>
+                                        <?php } ?>
+                                    </tr>
+                                <?php } ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><!-- /.container-fluid -->
+</section>
+
+<script>
+    const spinner = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+
+    $(document).ready(function() {
+        $('#table-shgb').find('thead tr th').addClass('text-nowrap');
+        $('#table-shgb').dataTable({
+            "scrollX": false,
+            "searching": true,
+            "ordering": false,
+            "autoWidth": true,
+            columnDefs: [{
+                "defaultContent": " ",
+                "targets": "_all"
+            }],
+        })
+    })
+
+    function filter_data() {
+        let proyek = $('#proyek_id').val()
+        let status = $('#status_proyek').val()
+        let url = '<?= base_url('dashboard/evaluasi_sudah_shgb/') ?>?proyek=' + proyek + '&status=' + status;
+        window.location.href = url;
+    }
+</script>
