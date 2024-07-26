@@ -236,11 +236,11 @@ class Export extends CI_Controller
                 ';
 
 
-        // $file = "Laporan Excel Master Tanah.xls";
-        // header("Content-type: application/vnd.ms-excel");
-        // header("Content-Disposition: attachment; filename=\"$file\"");
+        $file = "Laporan Excel Master Tanah.xls";
+        header("Content-type: application/vnd.ms-excel");
+        header("Content-Disposition: attachment; filename=\"$file\"");
         echo $test;
-        // exit;
+        exit;
     }
     public function pembayaran_master_tanah($id_tanah)
     {
