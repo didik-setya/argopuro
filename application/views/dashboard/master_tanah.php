@@ -13,7 +13,7 @@
 
                          <button class="btn btn-sm btn-success mb-3" onclick="add_tanah()"><i class="fa fa-plus"></i> Tambah Tanah</button>
 
-                         <form action="<?= site_url('export/master_tanah/') ?>" method="get">
+                         <form action="<?= site_url('export/master_tanah/') ?>" method="get" target="_blank">
                              <div class="row">
                                  <div class="col-sm-2">
                                      <div class="form-group">
@@ -41,6 +41,7 @@
                                  <div class="col-sm-2">
                                      <input type="date" name="tgl_akhir" id="tgl_akhir" class="form-control" onchange="refresh()" autocomplete="off" />
                                  </div>
+                                 <div class="col-sm-2"></div>
                                  <div class="col-sm-2">
                                      <button class="btn btn-primary btn-hover pr-5" type="submit">
                                          <i class="fa fa-print"></i> cetak

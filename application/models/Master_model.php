@@ -38,8 +38,8 @@ class Master_model extends CI_Model
         if (!empty($get['perumahan'])) {
             $this->db->where('b.id', $get['perumahan']);
         }
-        if (!empty($get['firstdate']) && !empty($get['lastdate'])) {
-            $this->db->where('a.tgl_pembelian BETWEEN "' . $get['firstdate'] . '" and "' . $get['lastdate'] . '"');
+        if (!empty($get['tgl_awal']) && !empty($get['tgl_akhir'])) {
+            $this->db->where('a.tgl_pembelian BETWEEN "' . $get['tgl_awal'] . '" and "' . $get['tgl_akhir'] . '"');
         }
 
         $i = 0;

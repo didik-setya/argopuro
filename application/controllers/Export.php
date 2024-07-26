@@ -19,26 +19,7 @@ class Export extends CI_Controller
         $tgl_awal = $this->input->get('tgl_awal');
         $tgl_akhir = $this->input->get('tgl_akhir');
         $status_perumahan = $this->input->get('status_perumahan');
-
-        if ($perumahan != '') {
-            if ($status_perumahan == '') {
-                $data = $this->export->export_master_tanah($perumahan, $tgl_awal, $tgl_akhir);
-            } else {
-                $data = $this->export->export_master_tanah($perumahan, $tgl_awal, $tgl_akhir, $status_perumahan);
-            }
-        } else {
-            if ($status_perumahan != '') {
-                $data = $this->export->export_master_tanah(null, $tgl_awal, $tgl_akhir, $status_perumahan);
-            } else {
-                $data = $this->export->export_master_tanah(null, $tgl_awal, $tgl_akhir);
-            }
-            if ($perumahan == NULL && $status_perumahan == NULL) {
-                $data = $this->export->export_master_tanah();
-            } else {
-                $data = $this->export->export_master_tanah();
-            }
-        }
-
+        $data = $this->export->export_master_tanah($perumahan, $status_perumahan, $tgl_awal, $tgl_akhir);
         $html_master_tanah = '';
         $no = 1;
 
@@ -255,11 +236,11 @@ class Export extends CI_Controller
                 ';
 
 
-        $file = "Laporan Excel Master Tanah.xls";
-        header("Content-type: application/vnd.ms-excel");
-        header("Content-Disposition: attachment; filename=\"$file\"");
+        // $file = "Laporan Excel Master Tanah.xls";
+        // header("Content-type: application/vnd.ms-excel");
+        // header("Content-Disposition: attachment; filename=\"$file\"");
         echo $test;
-        exit;
+        // exit;
     }
     public function pembayaran_master_tanah($id_tanah)
     {

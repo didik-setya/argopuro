@@ -23,7 +23,7 @@ class Export_model extends CI_Model
         }
 
         if ($status_perumahan != null) {
-            $this->db->where('b.status_proyek', $status_perumahan);
+            $this->db->where('a.status_proyek', $status_perumahan);
         }
 
         if (!empty($tgl_awal) && !empty($tgl_akhir)) {
