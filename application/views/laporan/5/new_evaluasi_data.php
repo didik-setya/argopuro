@@ -1,6 +1,17 @@
 <?php
 $status_induk = ['belum', 'terbit'];
-$status_tanah = ['ip_proyek', 'tanah_proyek'];
+// $status_tanah = ['ip_proyek', 'tanah_proyek'];
+
+$status_tanah = [
+    [
+        'name' => 'IP Proyek',
+        'val' => 'ip_proyek'
+    ],
+    [
+        'name' => 'Tanah Proyek',
+        'val' => 'tanah_proyek'
+    ]
+];
 $list_proyek = $this->db->get('master_proyek')->result();
 
 $ftahun = $this->input->get('ftahun');
@@ -23,7 +34,7 @@ $ftanah = $this->input->get('ftanah');
             <div class="col-12">
                 <div class="card">
                     <div class="card-body table-responsive">
-                        <table class="table table-sm table-bordered" id="main_table">
+                        <table class="table table-sm table-bordered w-100" id="main_table">
                             <thead>
                                 <tr class="bg-dark text-light">
                                     <th rowspan="2"><i class="fa fa-cogs"></i></th>
@@ -112,7 +123,17 @@ $ftanah = $this->input->get('ftanah');
                                         <td><?= $d->target_penyelesaian ?></td>
                                         <td><?= $d->ket_induk ?></td>
                                         <td><?= $d->status_induk ?></td>
-                                        <td><?= $d->status_tanah ?></td>
+                                        <td>
+                                            <?php
+                                            if ($d->status_tanah == 'ip_proyek') {
+                                                echo 'IP Proyek';
+                                            } else if ($d->status_tanah == 'tanah_proyek') {
+                                                echo 'Tanah Proyek';
+                                            } else {
+                                                echo '-';
+                                            }
+                                            ?>
+                                        </td>
                                     </tr>
                                 <?php } ?>
                             </tbody>
@@ -392,10 +413,10 @@ $ftanah = $this->input->get('ftanah');
                         <select name="ftanah" id="ftanah" class="form-control">
                             <option value="">--pilih--</option>
                             <?php foreach ($status_tanah as $st) {
-                                if ($ftanah == $st) {
-                                    echo '<option value="' . $st . '" selected>' . $st . '</option>';
+                                if ($ftanah == $st['val']) {
+                                    echo '<option value="' . $st['val'] . '" selected>' . $st['name'] . '</option>';
                                 } else {
-                                    echo '<option value="' . $st . '">' . $st . '</option>';
+                                    echo '<option value="' . $st['val'] . '">' . $st['name'] . '</option>';
                                 }
                             } ?>
                         </select>

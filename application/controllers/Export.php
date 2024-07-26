@@ -3640,7 +3640,13 @@ class Export extends CI_Controller
             $luas_terbit = $d->luas_terbit;
 
             $selisih = $total_luas_daftar - $luas_terbit;
-
+            if ($d->status_tanah == 'ip_proyek') {
+                $status_tanah = 'IP Proyek';
+            } else if ($d->status_tanah == 'tanah_proyek') {
+                $status_tanah = 'Tanah Proyek';
+            } else {
+                $status_tanah = '-';
+            }
 
             // var_dump($data_sub[0]);
 
@@ -3678,7 +3684,7 @@ class Export extends CI_Controller
                             <td>' . $d->target_penyelesaian . '</td>
                             <td>' . $d->ket_induk . '</td>
                             <td>' . $d->status_induk . '</td>
-                            <td>' . $d->status_tanah . '</td>
+                            <td>' . $status_tanah . '</td>
 
                 ';
 
@@ -3712,7 +3718,7 @@ class Export extends CI_Controller
                             <td>' . $d->target_penyelesaian . '</td>
                             <td>' . $d->ket_induk . '</td>
                             <td>' . $d->status_induk . '</td>
-                            <td>' . $d->status_tanah . '</td>
+                            <td>' . $status_tanah . '</td>
                         </tr>
                     ';
                 }
@@ -3749,7 +3755,7 @@ class Export extends CI_Controller
                             <td>' . $d->target_penyelesaian . '</td>
                             <td>' . $d->ket_induk . '</td>
                             <td>' . $d->status_induk . '</td>
-                            <td>' . $d->status_tanah . '</td>
+                            <td>' . $status_tanah . '</td>
                         </tr>
                     ';
                 }
