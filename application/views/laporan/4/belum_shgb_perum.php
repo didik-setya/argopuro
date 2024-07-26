@@ -130,7 +130,7 @@ $status_pengalihan = ['belum order', 'order', 'terbit'];
                                         ?>
                                             <tr style="background: #dedda0;">
                                                 <td><strong>Tahun <?= $ly ?></strong></td>
-                                                <?php for ($a = 1; $a < 41; $a++) { ?>
+                                                <?php for ($a = 1; $a < 40; $a++) { ?>
                                                     <td></td>
                                                 <?php } ?>
                                             </tr>
@@ -311,7 +311,7 @@ $status_pengalihan = ['belum order', 'order', 'terbit'];
                                         ?>
                                             <tr style="background: #dedda0;">
                                                 <td><strong>Tahun <?= $ly ?></strong></td>
-                                                <?php for ($a = 1; $a < 41; $a++) { ?>
+                                                <?php for ($a = 1; $a < 40; $a++) { ?>
                                                     <td></td>
                                                 <?php } ?>
                                             </tr>
