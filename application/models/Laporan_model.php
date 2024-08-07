@@ -1065,6 +1065,7 @@ class Laporan_model extends CI_Model
         if ($year) {
             $this->db->where('year(tbl_proses_induk.created_at)', $year);
         }
+        $this->db->group_by('tbl_proses_induk.id');
 
 
         return $this->db->get();

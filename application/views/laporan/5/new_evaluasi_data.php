@@ -442,7 +442,7 @@ $ftanah = $this->input->get('ftanah');
         $('tbody').find('td').addClass('text-nowrap text-center')
 
         $('#main_table').dataTable({
-            "scrollX": true,
+            "scrollX": false,
             "searching": true,
             "ordering": false,
             "autoWidth": false,

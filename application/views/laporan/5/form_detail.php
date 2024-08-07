@@ -90,7 +90,15 @@ $luas_selisih = $luas_terbit - $luas_surat;
                     </tr>
                     <tr>
                         <th>Status Tanah</th>
-                        <td><?= $data->status_tanah ?></td>
+                        <td><?php
+                            if ($data->status_tanah == 'ip_proyek') {
+                                echo 'IP Proyek';
+                            } else if ($data->status_tanah == 'tanah_proyek') {
+                                echo 'Tanah Proyek';
+                            } else {
+                                echo '-';
+                            }
+                            ?></td>
                     </tr>
                     <tr>
                         <th>Keterangan</th>

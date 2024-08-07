@@ -3727,7 +3727,6 @@ class Export extends CI_Controller
                 $html_sub2 = '';
                 foreach ($data_sub as $ds) {
                     $html_sub1 .= '
-                        <tr>
                             <td>' . $ds->keterangan1 . '</td>
                             <td>' . $ds->nama_surat_tanah1 . '</td>
                             <td>' . $ds->luas_surat . '</td>
@@ -3756,7 +3755,7 @@ class Export extends CI_Controller
                             <td>' . $d->ket_induk . '</td>
                             <td>' . $d->status_induk . '</td>
                             <td>' . $status_tanah . '</td>
-                        </tr>
+                        
                     ';
                 }
             }
