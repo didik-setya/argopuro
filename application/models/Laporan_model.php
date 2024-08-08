@@ -273,7 +273,8 @@ class Laporan_model extends CI_Model
                 'master_tanah.proyek_id = master_proyek.id'
             )
             ->join('master_status_proyek', 'master_tanah.status_proyek = master_status_proyek.id')
-            ->join('master_jenis_pengalihan', 'master_tanah.jenis_pengalihan = master_jenis_pengalihan.id');
+            ->join('master_jenis_pengalihan', 'master_tanah.jenis_pengalihan = master_jenis_pengalihan.id')
+            ->where('master_tanah.status_perindukan', 'belum');
 
         if ($tahun) {
             $this->db->where('year(master_tanah.created_at)', $tahun);

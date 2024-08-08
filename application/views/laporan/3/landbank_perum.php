@@ -8,7 +8,11 @@ $status_teknik = ['belum', 'selesai'];
 $status_pengalihan = ['belum order', 'order', 'terbit'];
 $f_proyek = $this->input->get('proyek');
 $f_status = $this->input->get('status');
+$f_year = $this->input->get('year');
 
+
+$data_belum_teknik = $this->laporan->get_data_landbank_perum($f_year, $f_proyek, $f_status, 'belum')->result();
+$data_sudah_teknik = $this->laporan->get_data_landbank_perum($f_year, $f_proyek, $f_status, 'selesai')->result();
 ?>
 <section class="content-header">
     <div class="container-fluid">
@@ -21,6 +25,7 @@ $f_status = $this->input->get('status');
 
                 <div class="row mb-3">
                     <div class="col-md-3">
+                        <small>Proyek</small>
                         <select name="proyek" id="f_proyek" class="form-control">
                             <option value="">--pilih proyek--</option>
                             <?php foreach ($list_proyek as $lp) {
@@ -33,6 +38,7 @@ $f_status = $this->input->get('status');
                         </select>
                     </div>
                     <div class="col-md-3">
+                        <small>Status Peralihan</small>
                         <select name="status" id="f_status" class="form-control">
                             <option value="">--pilih status peralihan--</option>
                             <?php foreach ($status_pengalihan as $sp) {
@@ -44,7 +50,19 @@ $f_status = $this->input->get('status');
                             } ?>
                         </select>
                     </div>
-                    <div class="col-md-3"></div>
+                    <div class="col-md-3">
+                        <small>Tahun</small>
+                        <select name="f_year" id="f_year" class="form-control">
+                            <option value="">--pilih tahun--</option>
+                            <?php for ($i = 1990; $i <= $this_year; $i++) { ?>
+                                <?php if ($i == $f_year) { ?>
+                                    <option value="<?= $i ?>" selected><?= $i ?></option>
+                                <?php } else { ?>
+                                    <option value="<?= $i ?>"><?= $i ?></option>
+                                <?php } ?>
+                            <?php } ?>
+                        </select>
+                    </div>
                     <div class="col-md-3">
                         <div class="text-right">
                             <button class="btn btn-sm btn-success" onclick="filter_data()"><i class="fas fa-filter"></i> Filter</button>
@@ -52,6 +70,9 @@ $f_status = $this->input->get('status');
                         </div>
                     </div>
                 </div>
+
+
+                <hr>
 
                 <nav>
                     <div class="nav nav-tabs" id="nav-tab" role="tablist">
@@ -131,119 +152,110 @@ $f_status = $this->input->get('status');
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($list_year as $ly) {
-                                    $data = $this->laporan->get_data_landbank_perum($ly, $f_proyek, $f_status, 'belum')->result();
+
+                                <?php $i = 1;
+                                foreach ($data_belum_teknik as $d) {
+                                    $getsertif1 = $this->db->get_where('master_sertifikat_tanah', ['id' => $d->status_surat_tanah1])->row();
+                                    $getsertif2 = $this->db->get_where('master_sertifikat_tanah', ['id' => $d->status_surat_tanah2])->row();
+
+                                    if ($getsertif1) {
+                                        $sertif1 = $getsertif1->nama_sertif;
+                                    } else {
+                                        $sertif1 = '-';
+                                    }
+
+                                    if ($getsertif2) {
+                                        $sertif2 = $getsertif2->nama_sertif;
+                                    } else {
+                                        $sertif2 = '-';
+                                    }
+
+                                    $satuan_pengalihan_hak = $d->total_harga_pengalihan /  $d->luas_surat;
+
+                                    $total_lain = $d->biaya_lain_pematangan + $d->biaya_lain_rugi + $d->biaya_lain_pbb + $d->biaya_lain;
+
+                                    $total_all = $total_lain + $d->total_harga_pengalihan + $d->harga_jual_makelar;
+
+                                    $harga_per_meter = $total_all / $d->luas_ukur;
                                 ?>
-                                    <tr style="background: #dedda0;">
-                                        <td><strong>Tahun <?= $ly ?></strong></td>
-                                        <?php for ($a = 1; $a < 41; $a++) { ?>
-                                            <td></td>
-                                        <?php } ?>
-                                    </tr>
-                                    <?php $i = 1;
-                                    foreach ($data as $d) {
-                                        $getsertif1 = $this->db->get_where('master_sertifikat_tanah', ['id' => $d->status_surat_tanah1])->row();
-                                        $getsertif2 = $this->db->get_where('master_sertifikat_tanah', ['id' => $d->status_surat_tanah2])->row();
-
-                                        if ($getsertif1) {
-                                            $sertif1 = $getsertif1->nama_sertif;
-                                        } else {
-                                            $sertif1 = '-';
-                                        }
-
-                                        if ($getsertif2) {
-                                            $sertif2 = $getsertif2->nama_sertif;
-                                        } else {
-                                            $sertif2 = '-';
-                                        }
-
-                                        $satuan_pengalihan_hak = $d->total_harga_pengalihan /  $d->luas_surat;
-
-                                        $total_lain = $d->biaya_lain_pematangan + $d->biaya_lain_rugi + $d->biaya_lain_pbb + $d->biaya_lain;
-
-                                        $total_all = $total_lain + $d->total_harga_pengalihan + $d->harga_jual_makelar;
-
-                                        $harga_per_meter = $total_all / $d->luas_ukur;
-                                    ?>
-                                        <tr>
-                                            <td>
-                                                <div class="dropdown">
-                                                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
-                                                        Action
-                                                    </button>
-                                                    <div class="dropdown-menu">
-                                                        <a class="dropdown-item" href="#" onclick="detail_data('<?= $d->id ?>')">Detail</a>
-                                                        <a class="dropdown-item" href="#" onclick="edit_data('<?= $d->id ?>')">Edit</a>
-                                                    </div>
+                                    <tr>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
+                                                    Action
+                                                </button>
+                                                <div class="dropdown-menu">
+                                                    <a class="dropdown-item" href="#" onclick="detail_data('<?= $d->id ?>')">Detail</a>
+                                                    <a class="dropdown-item" href="#" onclick="edit_data('<?= $d->id ?>')">Edit</a>
                                                 </div>
-                                            </td>
-                                            <td><?= $i++; ?></td>
-                                            <td><?= $d->nama_penjual ?></td>
-                                            <td><?= $d->nama_proyek . ' (' . $d->nama_status . ')'; ?></td>
-                                            <td><?= tgl_indo($d->tgl_pembelian) ?></td>
-                                            <td><?= $d->nomor_gambar ?></td>
+                                            </div>
+                                        </td>
+                                        <td><?= $i++; ?></td>
+                                        <td><?= $d->nama_penjual ?></td>
+                                        <td><?= $d->nama_proyek . ' (' . $d->nama_status . ')'; ?></td>
+                                        <td><?= tgl_indo($d->tgl_pembelian) ?></td>
+                                        <td><?= $d->nomor_gambar ?></td>
 
-                                            <td><?= $d->nama_surat_tanah1 ?></td>
-                                            <td><?= $sertif1 ?></td>
-                                            <td><?= $d->keterangan1 ?></td>
+                                        <td><?= $d->nama_surat_tanah1 ?></td>
+                                        <td><?= $sertif1 ?></td>
+                                        <td><?= $d->keterangan1 ?></td>
 
-                                            <td><?= $d->nama_surat_tanah2 ?></td>
-                                            <td><?= $sertif2 ?></td>
-                                            <td><?= $d->keterangan2 ?></td>
+                                        <td><?= $d->nama_surat_tanah2 ?></td>
+                                        <td><?= $sertif2 ?></td>
+                                        <td><?= $d->keterangan2 ?></td>
 
-                                            <td><?= $d->luas_surat ?></td>
-                                            <td><?= $d->luas_ukur ?></td>
+                                        <td><?= $d->luas_surat ?></td>
+                                        <td><?= $d->luas_ukur ?></td>
 
-                                            <td><?= $d->nomor_pbb ?></td>
-                                            <td><?= $d->atas_nama_pbb ?></td>
-                                            <td><?= $d->luas_bangunan_pbb ?></td>
-                                            <td>Rp. <?= number_format($d->njop_bangunan) ?></td>
-                                            <td><?= $d->luas_bumi_pbb ?></td>
-                                            <td>Rp. <?= number_format($d->njop_bumi_pbb) ?></td>
+                                        <td><?= $d->nomor_pbb ?></td>
+                                        <td><?= $d->atas_nama_pbb ?></td>
+                                        <td><?= $d->luas_bangunan_pbb ?></td>
+                                        <td>Rp. <?= number_format($d->njop_bangunan) ?></td>
+                                        <td><?= $d->luas_bumi_pbb ?></td>
+                                        <td>Rp. <?= number_format($d->njop_bumi_pbb) ?></td>
 
-                                            <td>Rp. <?= number_format($satuan_pengalihan_hak) ?></td>
-                                            <td>Rp. <?= number_format($d->total_harga_pengalihan) ?></td>
+                                        <td>Rp. <?= number_format($satuan_pengalihan_hak) ?></td>
+                                        <td>Rp. <?= number_format($d->total_harga_pengalihan) ?></td>
 
-                                            <td><?= $d->nama_makelar ?></td>
-                                            <td>Rp. <?= number_format($d->harga_jual_makelar) ?></td>
+                                        <td><?= $d->nama_makelar ?></td>
+                                        <td>Rp. <?= number_format($d->harga_jual_makelar) ?></td>
 
-                                            <td><?php
-                                                $c = date_create($d->created_at);
+                                        <td><?php
+                                            $c = date_create($d->created_at);
 
-                                                if ($d->status_pengalihan == 'belum order') {
-                                                    echo date_format($c, 'd M Y');
-                                                } ?>
-                                            </td>
-                                            <td>
-                                                <?php if ($d->status_pengalihan == 'order') {
-                                                    echo tgl_indo($d->tgl_status_pengalihan);
-                                                } ?>
-                                            </td>
-                                            <td>
-                                                <?php if ($d->status_pengalihan == 'terbit') {
-                                                    echo tgl_indo($d->tgl_status_pengalihan);
-                                                } ?>
-                                            </td>
-                                            <td>
-                                                <?= $d->nama_pengalihan ?>
-                                            </td>
-                                            <td><? echo tgl_indo($d->tgl_akta_pengalihan) ?></td>
-                                            <td><?= $d->no_akta_pengalihan ?></td>
-                                            <td><?= $d->atas_nama_pengalihan ?></td>
+                                            if ($d->status_pengalihan == 'belum order') {
+                                                echo date_format($c, 'd M Y');
+                                            } ?>
+                                        </td>
+                                        <td>
+                                            <?php if ($d->status_pengalihan == 'order') {
+                                                echo tgl_indo($d->tgl_status_pengalihan);
+                                            } ?>
+                                        </td>
+                                        <td>
+                                            <?php if ($d->status_pengalihan == 'terbit') {
+                                                echo tgl_indo($d->tgl_status_pengalihan);
+                                            } ?>
+                                        </td>
+                                        <td>
+                                            <?= $d->nama_pengalihan ?>
+                                        </td>
+                                        <td><? echo tgl_indo($d->tgl_akta_pengalihan) ?></td>
+                                        <td><?= $d->no_akta_pengalihan ?></td>
+                                        <td><?= $d->atas_nama_pengalihan ?></td>
 
-                                            <td>Rp. <?= number_format($d->biaya_lain_pematangan) ?></td>
-                                            <td>Rp. <?= number_format($d->biaya_lain_rugi) ?></td>
-                                            <td>Rp. <?= number_format($d->biaya_lain_pbb) ?></td>
-                                            <td>Rp. <?= number_format($d->biaya_lain) ?></td>
-                                            <td>Rp. <?= number_format($total_lain) ?></td>
+                                        <td>Rp. <?= number_format($d->biaya_lain_pematangan) ?></td>
+                                        <td>Rp. <?= number_format($d->biaya_lain_rugi) ?></td>
+                                        <td>Rp. <?= number_format($d->biaya_lain_pbb) ?></td>
+                                        <td>Rp. <?= number_format($d->biaya_lain) ?></td>
+                                        <td>Rp. <?= number_format($total_lain) ?></td>
 
-                                            <td>Rp. <?= number_format($total_all) ?></td>
-                                            <td>Rp. <?= number_format($harga_per_meter) ?></td>
-                                            <td><?= tgl_indo($d->serah_terima_finance) ?></td>
-                                            <td><?= $d->status_teknik ?></td>
-                                            <td><?= $d->ket ?></td>
-                                        </tr>
-                                    <?php } ?>
+                                        <td>Rp. <?= number_format($total_all) ?></td>
+                                        <td>Rp. <?= number_format($harga_per_meter) ?></td>
+                                        <td><?= tgl_indo($d->serah_terima_finance) ?></td>
+                                        <td><?= $d->status_teknik ?></td>
+                                        <td><?= $d->ket ?></td>
+                                    </tr>
                                 <?php } ?>
                             </tbody>
 
@@ -321,120 +333,109 @@ $f_status = $this->input->get('status');
                             </thead>
                             <tbody>
 
+                                <?php $i = 1;
+                                foreach ($data_sudah_teknik as $d) {
+                                    $getsertif1 = $this->db->get_where('master_sertifikat_tanah', ['id' => $d->status_surat_tanah1])->row();
+                                    $getsertif2 = $this->db->get_where('master_sertifikat_tanah', ['id' => $d->status_surat_tanah2])->row();
 
-                                <?php foreach ($list_year as $ly) {
-                                    $data = $this->laporan->get_data_landbank_perum($ly, $f_proyek, $f_status, 'selesai')->result();
+                                    if ($getsertif1) {
+                                        $sertif1 = $getsertif1->nama_sertif;
+                                    } else {
+                                        $sertif1 = '-';
+                                    }
+
+                                    if ($getsertif2) {
+                                        $sertif2 = $getsertif2->nama_sertif;
+                                    } else {
+                                        $sertif2 = '-';
+                                    }
+
+                                    $satuan_pengalihan_hak = $d->total_harga_pengalihan /  $d->luas_surat;
+
+                                    $total_lain = $d->biaya_lain_pematangan + $d->biaya_lain_rugi + $d->biaya_lain_pbb + $d->biaya_lain;
+
+                                    $total_all = $total_lain + $d->total_harga_pengalihan + $d->harga_jual_makelar;
+
+                                    $harga_per_meter = $total_all / $d->luas_ukur;
                                 ?>
-                                    <tr style="background: #dedda0;">
-                                        <td><strong>Tahun <?= $ly ?></strong></td>
-                                        <?php for ($a = 1; $a < 41; $a++) { ?>
-                                            <td></td>
-                                        <?php } ?>
-                                    </tr>
-                                    <?php $i = 1;
-                                    foreach ($data as $d) {
-                                        $getsertif1 = $this->db->get_where('master_sertifikat_tanah', ['id' => $d->status_surat_tanah1])->row();
-                                        $getsertif2 = $this->db->get_where('master_sertifikat_tanah', ['id' => $d->status_surat_tanah2])->row();
-
-                                        if ($getsertif1) {
-                                            $sertif1 = $getsertif1->nama_sertif;
-                                        } else {
-                                            $sertif1 = '-';
-                                        }
-
-                                        if ($getsertif2) {
-                                            $sertif2 = $getsertif2->nama_sertif;
-                                        } else {
-                                            $sertif2 = '-';
-                                        }
-
-                                        $satuan_pengalihan_hak = $d->total_harga_pengalihan /  $d->luas_surat;
-
-                                        $total_lain = $d->biaya_lain_pematangan + $d->biaya_lain_rugi + $d->biaya_lain_pbb + $d->biaya_lain;
-
-                                        $total_all = $total_lain + $d->total_harga_pengalihan + $d->harga_jual_makelar;
-
-                                        $harga_per_meter = $total_all / $d->luas_ukur;
-                                    ?>
-                                        <tr>
-                                            <td>
-                                                <div class="dropdown">
-                                                    <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
-                                                        Action
-                                                    </button>
-                                                    <div class="dropdown-menu">
-                                                        <a class="dropdown-item" href="#" onclick="detail_data('<?= $d->id ?>')">Detail</a>
-                                                        <a class="dropdown-item" href="#" onclick="edit_data('<?= $d->id ?>')">Edit</a>
-                                                        <a class="dropdown-item" href="#" onclick="delete_data('<?= $d->id ?>')">Hapus</a>
-                                                    </div>
+                                    <tr>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
+                                                    Action
+                                                </button>
+                                                <div class="dropdown-menu">
+                                                    <a class="dropdown-item" href="#" onclick="detail_data('<?= $d->id ?>')">Detail</a>
+                                                    <a class="dropdown-item" href="#" onclick="edit_data('<?= $d->id ?>')">Edit</a>
+                                                    <a class="dropdown-item" href="#" onclick="delete_data('<?= $d->id ?>')">Hapus</a>
                                                 </div>
-                                            </td>
-                                            <td><?= $i++; ?></td>
-                                            <td><?= $d->nama_penjual ?></td>
-                                            <td><?= $d->nama_proyek . ' (' . $d->nama_status . ')'; ?></td>
-                                            <td><?= tgl_indo($d->tgl_pembelian) ?></td>
-                                            <td><?= $d->nomor_gambar ?></td>
+                                            </div>
+                                        </td>
+                                        <td><?= $i++; ?></td>
+                                        <td><?= $d->nama_penjual ?></td>
+                                        <td><?= $d->nama_proyek . ' (' . $d->nama_status . ')'; ?></td>
+                                        <td><?= tgl_indo($d->tgl_pembelian) ?></td>
+                                        <td><?= $d->nomor_gambar ?></td>
 
-                                            <td><?= $d->nama_surat_tanah1 ?></td>
-                                            <td><?= $sertif1 ?></td>
-                                            <td><?= $d->keterangan1 ?></td>
+                                        <td><?= $d->nama_surat_tanah1 ?></td>
+                                        <td><?= $sertif1 ?></td>
+                                        <td><?= $d->keterangan1 ?></td>
 
-                                            <td><?= $d->nama_surat_tanah2 ?></td>
-                                            <td><?= $sertif2 ?></td>
-                                            <td><?= $d->keterangan2 ?></td>
+                                        <td><?= $d->nama_surat_tanah2 ?></td>
+                                        <td><?= $sertif2 ?></td>
+                                        <td><?= $d->keterangan2 ?></td>
 
-                                            <td><?= $d->luas_surat ?></td>
-                                            <td><?= $d->luas_ukur ?></td>
+                                        <td><?= $d->luas_surat ?></td>
+                                        <td><?= $d->luas_ukur ?></td>
 
-                                            <td><?= $d->nomor_pbb ?></td>
-                                            <td><?= $d->atas_nama_pbb ?></td>
-                                            <td><?= $d->luas_bangunan_pbb ?></td>
-                                            <td>Rp. <?= number_format($d->njop_bangunan) ?></td>
-                                            <td><?= $d->luas_bumi_pbb ?></td>
-                                            <td>Rp. <?= number_format($d->njop_bumi_pbb) ?></td>
+                                        <td><?= $d->nomor_pbb ?></td>
+                                        <td><?= $d->atas_nama_pbb ?></td>
+                                        <td><?= $d->luas_bangunan_pbb ?></td>
+                                        <td>Rp. <?= number_format($d->njop_bangunan) ?></td>
+                                        <td><?= $d->luas_bumi_pbb ?></td>
+                                        <td>Rp. <?= number_format($d->njop_bumi_pbb) ?></td>
 
-                                            <td>Rp. <?= number_format($satuan_pengalihan_hak) ?></td>
-                                            <td>Rp. <?= number_format($d->total_harga_pengalihan) ?></td>
+                                        <td>Rp. <?= number_format($satuan_pengalihan_hak) ?></td>
+                                        <td>Rp. <?= number_format($d->total_harga_pengalihan) ?></td>
 
-                                            <td><?= $d->nama_makelar ?></td>
-                                            <td>Rp. <?= number_format($d->harga_jual_makelar) ?></td>
+                                        <td><?= $d->nama_makelar ?></td>
+                                        <td>Rp. <?= number_format($d->harga_jual_makelar) ?></td>
 
-                                            <td><?php
-                                                $c = date_create($d->created_at);
-                                                if ($d->status_pengalihan == 'belum order') {
-                                                    echo date_format($c, 'd M Y');
-                                                } ?>
-                                            </td>
-                                            <td>
-                                                <?php if ($d->status_pengalihan == 'order') {
-                                                    echo tgl_indo($d->tgl_status_pengalihan);
-                                                } ?>
-                                            </td>
-                                            <td>
-                                                <?php if ($d->status_pengalihan == 'terbit') {
-                                                    echo tgl_indo($d->tgl_status_pengalihan);
-                                                } ?>
-                                            </td>
-                                            <td>
-                                                <?= $d->nama_pengalihan ?>
-                                            </td>
-                                            <td><? echo tgl_indo($d->tgl_akta_pengalihan) ?></td>
-                                            <td><?= $d->no_akta_pengalihan ?></td>
-                                            <td><?= $d->atas_nama_pengalihan ?></td>
+                                        <td><?php
+                                            $c = date_create($d->created_at);
+                                            if ($d->status_pengalihan == 'belum order') {
+                                                echo date_format($c, 'd M Y');
+                                            } ?>
+                                        </td>
+                                        <td>
+                                            <?php if ($d->status_pengalihan == 'order') {
+                                                echo tgl_indo($d->tgl_status_pengalihan);
+                                            } ?>
+                                        </td>
+                                        <td>
+                                            <?php if ($d->status_pengalihan == 'terbit') {
+                                                echo tgl_indo($d->tgl_status_pengalihan);
+                                            } ?>
+                                        </td>
+                                        <td>
+                                            <?= $d->nama_pengalihan ?>
+                                        </td>
+                                        <td><? echo tgl_indo($d->tgl_akta_pengalihan) ?></td>
+                                        <td><?= $d->no_akta_pengalihan ?></td>
+                                        <td><?= $d->atas_nama_pengalihan ?></td>
 
-                                            <td>Rp. <?= number_format($d->biaya_lain_pematangan) ?></td>
-                                            <td>Rp. <?= number_format($d->biaya_lain_rugi) ?></td>
-                                            <td>Rp. <?= number_format($d->biaya_lain_pbb) ?></td>
-                                            <td>Rp. <?= number_format($d->biaya_lain) ?></td>
-                                            <td>Rp. <?= number_format($total_lain) ?></td>
+                                        <td>Rp. <?= number_format($d->biaya_lain_pematangan) ?></td>
+                                        <td>Rp. <?= number_format($d->biaya_lain_rugi) ?></td>
+                                        <td>Rp. <?= number_format($d->biaya_lain_pbb) ?></td>
+                                        <td>Rp. <?= number_format($d->biaya_lain) ?></td>
+                                        <td>Rp. <?= number_format($total_lain) ?></td>
 
-                                            <td>Rp. <?= number_format($total_all) ?></td>
-                                            <td>Rp. <?= number_format($harga_per_meter) ?></td>
-                                            <td><?= tgl_indo($d->serah_terima_finance) ?></td>
-                                            <td><?= $d->status_teknik ?></td>
-                                            <td><?= $d->ket ?></td>
-                                        </tr>
-                                    <?php } ?>
+                                        <td>Rp. <?= number_format($total_all) ?></td>
+                                        <td>Rp. <?= number_format($harga_per_meter) ?></td>
+                                        <td><?= tgl_indo($d->serah_terima_finance) ?></td>
+                                        <td><?= $d->status_teknik ?></td>
+                                        <td><?= $d->ket ?></td>
+                                    </tr>
                                 <?php } ?>
 
                             </tbody>
@@ -589,8 +590,9 @@ $f_status = $this->input->get('status');
 
     function filter_data() {
         let f_proyek = $('#f_proyek').val();
-        let f_status = $('#f_status').val()
-        window.location.href = '<?= base_url('dashboard/landbank_perum?proyek=') ?>' + f_proyek + '&status=' + f_status;
+        let f_status = $('#f_status').val();
+        let f_year = $('#f_year').val();
+        window.location.href = '<?= base_url('dashboard/landbank_perum?proyek=') ?>' + f_proyek + '&status=' + f_status + '&year=' + f_year;
     }
 
     $('#form_edit').submit(function(e) {
