@@ -599,6 +599,7 @@ class Laporan_model extends CI_Model
         $this->db->from('master_tanah');
         $this->db->join('master_proyek', 'master_tanah.proyek_id = master_proyek.id', 'left');
         $this->db->join('master_status_proyek', 'master_tanah.status_proyek = master_status_proyek.id', 'left');
+        $this->db->where('master_tanah.status_perindukan', 'belum');
         $this->db->order_by('master_tanah.id', 'ASC');
 
         if ($status_teknik) {
@@ -715,7 +716,7 @@ class Laporan_model extends CI_Model
     }
     public function get_data_subproses_induk($id = null)
     {
-        $this->db->select('*');
+        $this->db->select('sub_proses_induk.id AS id_sub_induk, sub_proses_induk.*, master_tanah.*, master_proyek.*, master_status_proyek.*');
         $this->db->from('sub_proses_induk');
         $this->db->join('master_tanah', 'sub_proses_induk.tanah_id = master_tanah.id');
         $this->db->join('master_proyek', 'master_tanah.proyek_id = master_proyek.id');

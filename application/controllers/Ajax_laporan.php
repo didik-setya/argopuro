@@ -427,14 +427,12 @@ class Ajax_laporan extends CI_Controller
         cek_ajax();
         get_user();
         $this->form_validation->set_rules('no_gambar', 'Nomor Gambar', 'required');
-        $this->form_validation->set_rules('tgl_daftar_sk_hak', 'Tanggal Daftar SK Hak', 'required');
         $this->form_validation->set_rules('status_induk', 'Status Induk', 'required');
 
         if ($this->form_validation->run() == false) {
             $params = [
                 'type' => 'validation',
                 'err_no_gambar' => form_error('no_gambar'),
-                'err_tgl_daftar_sk' => form_error('tgl_daftar_sk_hak'),
                 'err_status_induk' => form_error('status_induk'),
             ];
             echo json_encode($params);
@@ -468,7 +466,9 @@ class Ajax_laporan extends CI_Controller
                     'created_at' => date('Y-m-d H:i:s'),
                     'tgl_ukur' => $this->input->post('tgl_ukur', true),
                     'no_ukur' => $this->input->post('no_ukur', true),
-                    'status_tanah' => $this->input->post('status_tanah', true)
+                    'status_tanah' => $this->input->post('status_tanah', true),
+                    'tgl_terbit_ukur' => $this->input->post('tbt_ukur'),
+                    'no_terbit_ukur' => $this->input->post('tgl_tbt_ukur')
                 ];
                 $this->db->insert('tbl_proses_induk', $data);
 
@@ -478,28 +478,38 @@ class Ajax_laporan extends CI_Controller
 
                 $count_tanah = count((array)$id_tanah);
                 $data_sub = array();
+                $data_idtanah = [];
                 for ($i = 0; $i < $count_tanah; $i++) {
                     $data_sub[] = [
                         'induk_id' => $id_proses_induk,
                         'tanah_id' => $id_tanah[$i],
                         'ket_sub' => $ket_sub[$i],
                     ];
+                    $row = $id_tanah[$i];
+                    $data_idtanah[] = $row;
                 }
+
+
+                $this->db->trans_begin();
+                $this->db->set('status_perindukan', 'sudah')->where_in('id', $data_idtanah)->update('master_tanah');
                 $this->db->insert_batch('sub_proses_induk', $data_sub);
 
-                if ($this->db->affected_rows() > 0) {
-                    $params = [
-                        'status' => true,
-                        'type' => 'result',
-                        'msg' => 'Proses Induk berhasil di tambahkan'
-                    ];
-                } else {
+                if ($this->db->trans_status() === FALSE) {
+                    $this->db->trans_rollback();
                     $params = [
                         'status' => false,
                         'type' => 'result',
                         'msg' => 'Proses Induk gagal di tambahkan'
                     ];
+                } else {
+                    $this->db->trans_commit();
+                    $params = [
+                        'status' => true,
+                        'type' => 'result',
+                        'msg' => 'Proses Induk berhasil di tambahkan'
+                    ];
                 }
+
                 echo json_encode($params);
                 break;
             case 'edit':
@@ -523,10 +533,10 @@ class Ajax_laporan extends CI_Controller
                     'updated_at' => date('Y-m-d H:i:s'),
                     'tgl_ukur' => $this->input->post('tgl_ukur', true),
                     'no_ukur' => $this->input->post('no_ukur', true),
-                    'status_tanah' => $this->input->post('status_tanah', true)
+                    'status_tanah' => $this->input->post('status_tanah', true),
+                    'tgl_terbit_ukur' => $this->input->post('tbt_ukur'),
+                    'no_terbit_ukur' => $this->input->post('tgl_tbt_ukur')
                 ];
-                $this->db->where('id', $id)->update('tbl_proses_induk', $data);
-                $this->db->where('induk_id', $id)->delete('sub_proses_induk');
 
                 $sub_id = $this->input->post('sub_id');
                 $id_tanah = $this->input->post('tanah_id');
@@ -535,22 +545,34 @@ class Ajax_laporan extends CI_Controller
 
                 $count_tanah = count((array)$id_tanah);
                 $data_sub = array();
+                $list_id_tanah = [];
                 for ($i = 0; $i < $count_tanah; $i++) {
                     $data_sub[] = [
                         'induk_id' => $id,
                         'tanah_id' => $id_tanah[$i],
                         'ket_sub' => $ket_sub[$i],
                     ];
+                    $row = $id_tanah[$i];
+                    $list_id_tanah[] = $row;
                 }
+
+
+                $this->db->trans_begin();
+
+                $this->db->where('id', $id)->update('tbl_proses_induk', $data);
+                $this->db->where('induk_id', $id)->delete('sub_proses_induk');
+                $this->db->set('status_perindukan', 'sudah')->where_in('id', $list_id_tanah)->update('master_tanah');
                 $this->db->insert_batch('sub_proses_induk', $data_sub);
 
-                if ($this->db->affected_rows() > 0) {
+                if ($this->db->trans_status() === TRUE) {
+                    $this->db->trans_commit();
                     $params = [
                         'status' => true,
                         'type' => 'result',
                         'msg' => 'Proses Induk berhasil di edit'
                     ];
                 } else {
+                    $this->db->trans_rollback();
                     $params = [
                         'status' => false,
                         'type' => 'result',
@@ -560,6 +582,31 @@ class Ajax_laporan extends CI_Controller
                 echo json_encode($params);
                 break;
         }
+    }
+
+    public function delete_sub_induk()
+    {
+        cek_ajax();
+        $id = $this->input->post('id');
+        $id_tanah = $this->input->post('tanah');
+        $this->db->trans_begin();
+
+        $this->db->set('status_perindukan', 'belum')->where('id', $id_tanah)->update('master_tanah');
+        $this->db->where('id', $id)->delete('sub_proses_induk');
+        if ($this->db->trans_status() === TRUE) {
+            $this->db->trans_commit();
+            $params = [
+                'status' => true,
+                'msg' => 'Data tanah berhasil di hapus'
+            ];
+        } else {
+            $this->db->trans_rollback();
+            $params = [
+                'status' => false,
+                'msg' => 'Data tanah gagal di hapus'
+            ];
+        }
+        echo json_encode($params);
     }
 
     public function get_induk_tanah()

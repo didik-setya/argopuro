@@ -44,6 +44,8 @@ $ftanah = $this->input->get('ftanah');
 
                                     <th colspan="3">Luas M<SUP>2</SUP></th>
                                     <th colspan="2">Daftar Ukur</th>
+                                    <th colspan="2">Terbit Ukur</th>
+
                                     <th colspan="2">Daftar SK Hak</th>
                                     <th colspan="2">Terbit SK Hak</th>
                                     <th colspan="2">Daftar SHGB</th>
@@ -57,6 +59,8 @@ $ftanah = $this->input->get('ftanah');
                                     <th>Daftar</th>
                                     <th>Terbit</th>
                                     <th>Selisih</th>
+                                    <th>Tanggal</th>
+                                    <th>No. Berkas</th>
                                     <th>Tanggal</th>
                                     <th>No. Berkas</th>
                                     <th>Tanggal</th>
@@ -87,6 +91,7 @@ $ftanah = $this->input->get('ftanah');
                                     $luas_terbit = $d->luas_terbit;
 
                                     $selisih = $total_luas_daftar - $luas_terbit;
+                                    $hash_id = md5(sha1($d->id_proses_induk));
                                 ?>
                                     <tr>
                                         <td>
@@ -98,6 +103,8 @@ $ftanah = $this->input->get('ftanah');
                                                 <div class="dropdown-menu">
                                                     <a class="dropdown-item" href="#" onclick="detail_data('<?= $d->id_proses_induk ?>')">Detail</a>
                                                     <a class="dropdown-item" href="#" onclick="edit_data('<?= $d->id_proses_induk ?>')">Edit Status</a>
+                                                    <!-- <a class="dropdown-item" href="<?= base_url('dashboard/edit_perindukan?induk=' . $d->id_proses_induk) ?>">Edit</a> -->
+
                                                     <a class="dropdown-item" href="#" onclick="delete_data('<?= $d->id_proses_induk ?>')">Hapus</a>
                                                 </div>
                                             </div>
@@ -111,6 +118,8 @@ $ftanah = $this->input->get('ftanah');
                                         <td><?= $selisih ?></td>
                                         <td><?= $d->tgl_ukur ?></td>
                                         <td><?= $d->no_ukur ?></td>
+                                        <td><?= $d->tgl_terbit_ukur ?></td>
+                                        <td><?= $d->no_terbit_ukur ?></td>
                                         <td><?= $d->tgl_daftar_sk_hak ?></td>
                                         <td><?= $d->no_daftar_sk_hak ?></td>
                                         <td><?= $d->tgl_terbit_sk_hak ?></td>
@@ -185,10 +194,22 @@ $ftanah = $this->input->get('ftanah');
                     </div>
 
                     <div class="form-group mb-3">
+                        <label>Terbit Ukur</label>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <input type="date" name="tbt_ukur" id="tbt_ukur" class="form-control">
+                            </div>
+                            <div class="col-sm-6">
+                                <input type="text" name="tgl_tbt_ukur" id="tgl_tbt_ukur" class="form-control" placeholder="No. Terbit Ukur">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
                         <label>Daftar SK Hak</label>
                         <div class="row">
                             <div class="col-sm-6">
-                                <input type="date" placeholder="Luas Surat" name="tgl_daftar_sk_hak" id="tgl_daftar_sk_hak" class="form-control" required>
+                                <input type="date" placeholder="Luas Surat" name="tgl_daftar_sk_hak" id="tgl_daftar_sk_hak" class="form-control">
                             </div>
                             <small class="text-danger" id="err_tgl_daftar_sk"></small>
                             <div class="col-sm-6">
@@ -524,10 +545,9 @@ $ftanah = $this->input->get('ftanah');
     $('#form_induk').submit(function(e) {
         e.preventDefault()
 
-        let tgl_daftar_sk_hak = $('#tgl_daftar_sk_hak').val();
         let list_data_tanah = $('#table_tanah_induk').find('tbody').html();
 
-        if (tgl_daftar_sk_hak != '' && list_data_tanah != '') {
+        if (list_data_tanah != '') {
             $('#to_submit').attr('disabled', true)
             $('#to_submit').html(spinner)
 
@@ -599,6 +619,10 @@ $ftanah = $this->input->get('ftanah');
 
         $('#tanah_id').val('');
         $('#ket_sub').val('');
+
+        $('#tbt_ukur').val('')
+        $('#tgl_tbt_ukur').val('')
+
     }
 
     function edit_data(id) {
@@ -639,7 +663,11 @@ $ftanah = $this->input->get('ftanah');
             },
         });
 
+        get_data_for_edit(id)
+    }
 
+
+    function get_data_for_edit(id) {
         $.ajax({
             url: '<?= base_url('ajax_laporan/get_induk_tanah') ?>',
             data: {
@@ -670,6 +698,9 @@ $ftanah = $this->input->get('ftanah');
                 $('#tgl_ukur').val(data.tgl_ukur);
                 $('#no_ukur').val(data.no_ukur);
                 $('#status_tanah').val(data.status_tanah);
+
+                $('#tbt_ukur').val(data.tgl_terbit_ukur)
+                $('#tgl_tbt_ukur').val(data.no_terbit_ukur)
                 // $('#tanah_id').val(data.tanah_id)
                 // $('#ket_sub').val(data.ket_sub)
 
@@ -678,7 +709,7 @@ $ftanah = $this->input->get('ftanah');
                 let no = 1;
                 let val = '';
                 for (i = 0; i < list.length; i++) {
-                    val += '<tr><td class="no_list">' + no++ + '</td><td>' + list[i].nama_proyek + ' (' + list[i].nama_status + ')' + '</td><td>' + list[i].nama_penjual + '</td><td>' + list[i].luas_surat + '</td><td><input class="form-control" name="ket_sub[]" value="' + list[i].ket_sub + '"></td><td><button type="button" class="btn btn-sm btn-danger delete-form"><i class="fa fa-trash"></i></button><input type="hidden" name="tanah_id[]" value="' + list[i].tanah_id + '"></td></tr>';
+                    val += '<tr><td class="no_list">' + no++ + '</td><td>' + list[i].nama_proyek + ' (' + list[i].nama_status + ')' + '</td><td>' + list[i].nama_penjual + '</td><td>' + list[i].luas_surat + '</td><td><input class="form-control" name="ket_sub[]" value="' + list[i].ket_sub + '"></td><td><button type="button" class="btn btn-sm btn-warning delete_tanah" data-id="' + list[i].id_sub_induk + '" data-induk="' + list[i].induk_id + '" data-tanah="' + list[i].tanah_id + '"><i class="fa fa-trash"></i></button><input type="hidden" name="tanah_id[]" value="' + list[i].tanah_id + '"></td></tr>';
                 }
                 $('#table_tanah_induk').find('tbody').html(val)
 
@@ -689,7 +720,6 @@ $ftanah = $this->input->get('ftanah');
                 error_alert(error)
             }
         })
-
     }
 
     function filter_data() {
@@ -772,4 +802,68 @@ $ftanah = $this->input->get('ftanah');
     $(document).on('hidden.bs.modal', '.modal', function() {
         $('.modal:visible').length && $(document.body).addClass('modal-open');
     });
+
+    $(document).on('click', '.delete_tanah', function() {
+        let id = $(this).data('id');
+        let induk = $(this).data('induk');
+        let tanah = $(this).data('tanah');
+        Swal.fire({
+            title: "Apakah anda yakin?",
+            text: "Untuk menghapus data ini?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes",
+        }).then((res) => {
+            if (res.isConfirmed) {
+                delete_tanah(id, induk, tanah)
+            }
+        })
+    })
+
+    function delete_tanah(id, induk_id, tanah_id) {
+        loading()
+        $.ajax({
+            url: '<?= base_url('ajax_laporan/delete_sub_induk') ?>',
+            data: {
+                id: id,
+                tanah: tanah_id
+            },
+            type: 'POST',
+            dataType: 'JSON',
+            success: function(d) {
+                setTimeout(() => {
+                    Swal.close()
+                    if (d.status == false) {
+                        error_alert(d.msg)
+                    } else {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: d.msg
+                        }).then((res) => {
+                            get_data_for_edit(induk_id)
+                        })
+                    }
+                }, 200);
+            },
+            error: function(xhr, status, error) {
+                setTimeout(() => {
+                    Swal.close()
+                    error_alert(error)
+                }, 200);
+            }
+        })
+    }
+
+
+    function loading() {
+        Swal.fire({
+            title: "Loading",
+            html: "Please wait...",
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            },
+        });
+    }
 </script>

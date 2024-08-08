@@ -131,7 +131,8 @@ $list_year = [$last_year, $this_year];
                                                             </button>
                                                             <div class="dropdown-menu">
                                                                 <a class="dropdown-item" href="#" onclick="detail_data('<?= $d->id_proses_induk ?>')">Detail</a>
-                                                                <a class="dropdown-item" href="#" onclick="edit_data('<?= $d->id_proses_induk ?>')">Edit Status</a>
+                                                                <!-- <a class="dropdown-item" href="#" onclick="edit_data('<?= $d->id_proses_induk ?>')">Edit Status</a> -->
+                                                                <a class="dropdown-item" href="">Edit Data</a>
                                                                 <a class="dropdown-item" href="#" onclick="delete_data('<?= $d->id_proses_induk ?>')">Hapus</a>
                                                             </div>
                                                         </div>

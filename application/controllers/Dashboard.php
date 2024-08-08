@@ -391,6 +391,31 @@ class Dashboard extends CI_Controller
         ];
         $this->load->view('dashboard', $data);
     }
+
+    public function edit_perindukan()
+    {
+        $id = $this->input->get('induk');
+        if (!$id) {
+            redirect(base_url('dashboard/evaluasi_data_proses_induk'));
+        } else {
+            $data_induk = $this->laporan->get_data_proses_induk(null, null, null, $id)->row();
+            $data_tanah = $this->laporan->get_data_subproses_induk($id)->result();
+
+            if ($data_induk) {
+                $data = [
+                    'title' => 'Rekap Data Proses Induk',
+                    'user' => get_user(),
+                    'view' => 'laporan/5/edit_perindukan',
+                    'induk' => $data_induk,
+                    'tanah' => $data_tanah,
+                    'id' => $id
+                ];
+                $this->load->view('dashboard', $data);
+            } else {
+                redirect(base_url('dashboard/evaluasi_data_proses_induk'));
+            }
+        }
+    }
     //LAPORAN NO.5 END
 
     //LAPORAN NO.6 START
