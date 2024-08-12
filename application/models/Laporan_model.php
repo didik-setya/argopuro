@@ -1230,6 +1230,7 @@ class Laporan_model extends CI_Model
             tbl_splitsing.*,
             tbl_proses_induk.luas_terbit AS luas_induk,
             tbl_proses_induk.no_terbit_shgb,
+            tbl_proses_induk.sisa_induk AS sisa_from_induk
         ')
             ->from('tbl_splitsing')
             ->join('tbl_proses_induk', 'tbl_splitsing.induk_id = tbl_proses_induk.id');
@@ -1237,8 +1238,6 @@ class Laporan_model extends CI_Model
         if ($id) {
             $this->db->where('tbl_splitsing.id', $id);
         }
-
-
 
         $data = $this->db->get();
         return $data;

@@ -468,7 +468,8 @@ class Ajax_laporan extends CI_Controller
                     'no_ukur' => $this->input->post('no_ukur', true),
                     'status_tanah' => $this->input->post('status_tanah', true),
                     'tgl_terbit_ukur' => $this->input->post('tbt_ukur'),
-                    'no_terbit_ukur' => $this->input->post('tgl_tbt_ukur')
+                    'no_terbit_ukur' => $this->input->post('tgl_tbt_ukur'),
+                    'sisa_induk' => $this->input->post('luas_terbit'),
                 ];
                 $this->db->insert('tbl_proses_induk', $data);
 
@@ -766,8 +767,8 @@ class Ajax_laporan extends CI_Controller
                         'luas_daftar' => $this->input->post('l_dft', true)[$i],
                         'luas_terbit' => $this->input->post('l_tbt', true)[$i],
                         'no_shgb' => $this->input->post('shgb', true)[$i],
-                        'masa_berlaku' => $this->input->post('exp', true)[$i],
-                        'tgl_terbit' => $this->input->post('tgl', true)[$i],
+                        'masa_berlaku' => $this->input->post('masa_berlaku', true),
+                        'tgl_terbit' => $this->input->post('tgl_terbit', true),
                         'keterangan' => $this->input->post('ket')[$i]
                     ];
                     $splitsing[] = $row;
@@ -781,8 +782,9 @@ class Ajax_laporan extends CI_Controller
                     'status' => $this->input->post('status', true),
                     'total_luas_splitsing' => $jml_luas,
                     'sisa_induk' => $sisa_induk,
-                    'create_at' => date('Y-m-d')
+                    'create_at' => date('Y-m-d'),
                 ];
+
 
 
                 if ($jml_luas > $limit_luas) {
@@ -793,9 +795,9 @@ class Ajax_laporan extends CI_Controller
                         'limit' => $limit_luas
                     ];
                 } else {
-
+                    $induk_id = $this->input->post('induk', true);
                     $this->db->trans_begin();
-
+                    $this->db->set('sisa_induk', $sisa_induk)->where('id', $induk_id)->update('tbl_proses_induk');
                     $this->db->insert('tbl_splitsing', $data_splitsing);
                     $this->db->insert_batch('sub_splitsing', $splitsing);
 
@@ -868,13 +870,42 @@ class Ajax_laporan extends CI_Controller
                 break;
 
             case 'data_edit':
-                $data_splitsing = $this->laporan->get_data_has_splitsing($id)->row();
-                $splitsing = $this->db->get_where('sub_splitsing', ['splitsing_id' => $id])->result();
+                $type = $this->input->post('type');
+                if ($type) {
+                    $sub_splitsing = $this->db->get_where('sub_splitsing', ['splitsing_id' => $id])->result();
+                    $splitsing = $this->db->get_where('tbl_splitsing', ['id' => $id])->row();
+                    $induk_splitsing = $this->laporan->get_data_has_splitsing($type, 1)->row();
 
-                $output = [
-                    'data' => $data_splitsing,
-                    'splitsing' => $splitsing
-                ];
+                    $data = [
+                        'create_at' => $splitsing->create_at,
+                        'id' => $splitsing->id,
+                        'induk_id' => $splitsing->induk_id,
+                        'luas_induk' => $induk_splitsing->luas_induk,
+                        'no_daftar' => $splitsing->no_daftar,
+                        'no_terbit_shgb' => $induk_splitsing->no_terbit_shgb,
+                        'sisa_induk' => $induk_splitsing->sisa_induk,
+                        'status' => $splitsing->status,
+                        'status_penjualan' => $splitsing->status_penjualan,
+                        'tgl_daftar' => $splitsing->tgl_daftar,
+                        'total_luas_splitsing' => $splitsing->total_luas_splitsing,
+                        'type' => $splitsing->type
+                    ];
+
+                    $output = [
+                        'data' => $data,
+                        'splitsing' => $sub_splitsing
+                    ];
+                } else {
+                    $data_splitsing = $this->laporan->get_data_has_splitsing($id)->row();
+                    $splitsing = $this->db->get_where('sub_splitsing', ['splitsing_id' => $id])->result();
+
+                    $output = [
+                        'data' => $data_splitsing,
+                        'splitsing' => $splitsing
+                    ];
+                }
+
+
                 echo json_encode($output);
                 break;
             case 'edit':
@@ -907,8 +938,8 @@ class Ajax_laporan extends CI_Controller
                             'luas_daftar' => $this->input->post('l_dft', true)[$i],
                             'luas_terbit' => $this->input->post('l_tbt', true)[$i],
                             'no_shgb' => $this->input->post('shgb', true)[$i],
-                            'masa_berlaku' => $this->input->post('exp', true)[$i],
-                            'tgl_terbit' => $this->input->post('tgl', true)[$i],
+                            'masa_berlaku' => $this->input->post('masa_berlaku', true),
+                            'tgl_terbit' => $this->input->post('tgl_terbit', true),
                             'keterangan' => $this->input->post('ket')[$i]
                         ];
                         $id_split = $this->input->post('id_split', true)[$i];
@@ -948,6 +979,7 @@ class Ajax_laporan extends CI_Controller
 
                 $new_sisa = $data->sisa_induk + $subsplit->luas_daftar;
                 $new_total = $data->total_luas_splitsing - $subsplit->luas_daftar;
+
                 $update_splitsing = [
                     'total_luas_splitsing' => $new_total,
                     'sisa_induk' => $new_sisa
@@ -957,6 +989,7 @@ class Ajax_laporan extends CI_Controller
 
                 $this->db->where('id', $data->id)->update('tbl_splitsing', $update_splitsing);
                 $this->db->where('id', $id)->delete('sub_splitsing');
+                $this->db->set('sisa_induk', $new_sisa)->where('id', $data->induk_id)->update('tbl_proses_induk');
 
                 if ($this->db->trans_status() === FALSE) {
                     $this->db->trans_rollback();
@@ -978,8 +1011,13 @@ class Ajax_laporan extends CI_Controller
                 break;
             case 'delete_data':
 
+                $data_splitsing = $this->db->get_where('tbl_splitsing', ['id' => $id])->row();
+                $data_induk = $this->db->get_where('tbl_proses_induk', ['id' => $data_splitsing->induk_id])->row();
+                $new_total_luas = $data_splitsing->total_luas_splitsing + $data_induk->sisa_induk;
+
                 $this->db->trans_begin();
 
+                $this->db->set('sisa_induk', $new_total_luas)->where('id', $data_induk->id)->update('tbl_proses_induk');
                 $this->db->delete('tbl_splitsing', ['id' => $id]);
                 $this->db->delete('sub_splitsing', ['splitsing_id' => $id]);
 
@@ -998,6 +1036,82 @@ class Ajax_laporan extends CI_Controller
                 }
                 echo json_encode($params);
                 die;
+                break;
+            case 'add_from_split':
+
+                $post = $this->input->post(null, true);
+                $new_splitsing_id = time();
+
+                if (!$post['blok']) {
+                    $params = [
+                        'status' => false,
+                        'msg' => 'Harap isi data blok'
+                    ];
+                } else {
+                    $blok = $post['blok'];
+                    $sisa_luas = $post['luas'];
+                    $c_blok = count($blok);
+                    $l_blok = 0;
+                    $data_sub_splitsing = [];
+                    for ($i = 0; $i < $c_blok; $i++) {
+                        $row = [
+                            'splitsing_id' => $new_splitsing_id,
+                            'blok' => $blok[$i],
+                            'luas_daftar' => $post['l_dft'][$i],
+                            'luas_terbit' => $post['l_tbt'][$i],
+                            'no_shgb' => $post['shgb'][$i],
+                            'masa_berlaku' => $post['masa_berlaku'],
+                            'tgl_terbit' => $post['tgl_terbit'],
+                            'keterangan' => $post['ket'][$i]
+                        ];
+                        $data_sub_splitsing[] = $row;
+                        $l_blok += $post['l_dft'][$i];
+                    }
+
+                    if ($l_blok > $sisa_luas) {
+                        $params = [
+                            'status' => false,
+                            'msg' => 'Total luas blok melebihi sisa luas'
+                        ];
+                    } else {
+                        $sisa_induk = $sisa_luas - $l_blok;
+                        $induk = $post['induk'];
+                        $data_splitsing = [
+                            'id' => $new_splitsing_id,
+                            'induk_id' => $this->input->post('induk', true),
+                            'no_daftar' => $this->input->post('no_daftar', true),
+                            'tgl_daftar' => $this->input->post('tgl_daftar', true),
+                            'status' => $this->input->post('status', true),
+                            'total_luas_splitsing' => $l_blok,
+                            'sisa_induk' => $sisa_induk,
+                            'create_at' => date('Y-m-d')
+                        ];
+
+
+                        $this->db->trans_begin();
+
+                        $this->db->insert('tbl_splitsing', $data_splitsing);
+                        $this->db->insert_batch('sub_splitsing', $data_sub_splitsing);
+                        $this->db->set('sisa_induk', $sisa_induk)->where('id', $induk)->update('tbl_proses_induk');
+
+                        if ($this->db->trans_status() === FALSE) {
+                            $this->db->trans_rollback();
+                            $params = [
+                                'status' => false,
+                                'msg' => 'Gagal menambahkan data'
+                            ];
+                        } else {
+                            $this->db->trans_commit();
+                            $params = [
+                                'status' => true,
+                                'msg' => 'Data berhasil di tambahkan'
+                            ];
+                        }
+                    }
+                }
+                echo json_encode($params);
+                die;
+
                 break;
         }
     }
