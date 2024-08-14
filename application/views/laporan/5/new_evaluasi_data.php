@@ -501,11 +501,20 @@ $ftanah = $this->input->get('ftanah');
             })
         } else {
             $('#modal-listitems').modal('show')
-            load_list_data_tanah(stat_tanah);
+            var formData = $('#form_induk').serializeArray();
+            let tanah = [];
+            for (let i = 0; i < formData.length; i++) {
+                if (formData[i].name == 'tanah_id[]') {
+                    tanah.push(formData[i].value)
+                }
+            }
+            load_list_data_tanah(stat_tanah, tanah);
         }
+
+
     })
 
-    function load_list_data_tanah(status) {
+    function load_list_data_tanah(status, tanah_id = null) {
         $('#itemsdata').DataTable().destroy();
         $('#itemsdata').dataTable({
             "processing": true,
@@ -516,7 +525,8 @@ $ftanah = $this->input->get('ftanah');
                 "url": "<?= base_url('ajax_laporan/load_list_tanah_5') ?>",
                 "type": "POST",
                 "data": {
-                    "status": status
+                    "status": status,
+                    "tanah_id": tanah_id
                 }
             },
 
@@ -535,7 +545,11 @@ $ftanah = $this->input->get('ftanah');
 
 
     $('#status_tanah').change(function() {
-        $('#table_tanah_induk').find('tbody').html('')
+        let action = $('#act').val();
+        console.log(action);
+        if (action == 'add') {
+            $('#table_tanah_induk').find('tbody').html('')
+        }
     })
 
     $(document).on('click', '.delete-form', function() {

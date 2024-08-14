@@ -590,7 +590,7 @@ class Laporan_model extends CI_Model
     //LAPORAN NO 4 END
 
     //LAPORAN NO 5 START
-    private function q_list_tambah_tanah($status_teknik = null)
+    private function q_list_tambah_tanah($status_teknik = null, $tanah = null)
     {
         $this->db->select('master_tanah.*,
         master_tanah.id as id_tanah,
@@ -609,11 +609,15 @@ class Laporan_model extends CI_Model
                 $this->db->where('master_tanah.status_teknik', 'belum');
             }
         }
+
+        if ($tanah) {
+            $this->db->where_not_in('master_tanah.id', $tanah);
+        }
     }
 
-    private function filter_list_tanah($status_teknik = null)
+    private function filter_list_tanah($status_teknik = null, $tanah = null)
     {
-        $this->q_list_tambah_tanah($status_teknik);
+        $this->q_list_tambah_tanah($status_teknik, $tanah);
         $search = ['nama_regu', 'nama_user'];
         $i = 0;
         foreach ($search as $item) {
@@ -633,25 +637,25 @@ class Laporan_model extends CI_Model
         }
     }
 
-    public function get_list_data_tanah($status_teknik = null)
+    public function get_list_data_tanah($status_teknik = null, $tanah = null)
     {
-        $this->filter_list_tanah($status_teknik);
+        $this->filter_list_tanah($status_teknik, $tanah);
         if ($_POST['length'] != -1)
             $this->db->limit($_POST['length'], $_POST['start']);
         $query = $this->db->get();
         return $query->result();
     }
 
-    public function get_filtered_list_tanah($status_teknik = null)
+    public function get_filtered_list_tanah($status_teknik = null, $tanah = null)
     {
-        $this->filter_list_tanah($status_teknik);
+        $this->filter_list_tanah($status_teknik, $tanah);
         $query = $this->db->get();
         return $query->num_rows();
     }
 
-    public function count_all_list_tanah($status_teknik = null)
+    public function count_all_list_tanah($status_teknik = null, $tanah = null)
     {
-        $this->q_list_tambah_tanah($status_teknik);
+        $this->q_list_tambah_tanah($status_teknik, $tanah);
         return $this->db->count_all_results();
     }
 
@@ -1094,6 +1098,23 @@ class Laporan_model extends CI_Model
         return $data;
     }
 
+    public function count_splitsing_7($induk = null, $status = null)
+    {
+        $this->db->select('SUM(total_luas_splitsing) AS luas_splitsing')
+            ->from('tbl_splitsing');
+
+        if ($induk) {
+            $this->db->where('tbl_splitsing.induk_id', $induk);
+        }
+
+        if ($status) {
+            $this->db->where('tbl_splitsing.status', $status);
+        }
+
+        $data = $this->db->get();
+        return $data;
+    }
+
     public function get_jalan_fasos($proyek_id = NULL, $firstdate = '', $lastdate = '')
     {
         $this->db->select('*');
@@ -1215,9 +1236,9 @@ class Laporan_model extends CI_Model
         }
 
         if ($data_sudah) {
-            $data = $this->db->select('id, no_terbit_shgb, luas_terbit')->where_not_in('id', $dt)->where('status_induk', 'terbit')->get('tbl_proses_induk');
+            $data = $this->db->select('id, no_terbit_shgb, luas_terbit')->where_not_in('id', $dt)->where('status_induk', 'terbit')->where('status_tanah', 'tanah_proyek')->get('tbl_proses_induk');
         } else {
-            $data = $this->db->select('id, no_terbit_shgb, luas_terbit')->where('status_induk', 'terbit')->get('tbl_proses_induk');
+            $data = $this->db->select('id, no_terbit_shgb, luas_terbit')->where('status_induk', 'terbit')->where('status_tanah', 'tanah_proyek')->get('tbl_proses_induk');
         }
 
         return $data;

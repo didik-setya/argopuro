@@ -564,6 +564,11 @@ class Ajax_laporan extends CI_Controller
                 $this->db->where('induk_id', $id)->delete('sub_proses_induk');
                 $this->db->set('status_perindukan', 'sudah')->where_in('id', $list_id_tanah)->update('master_tanah');
                 $this->db->insert_batch('sub_proses_induk', $data_sub);
+                $status_tanah = $this->input->post('status_tanah');
+
+                if ($status_tanah == 'tanah_proyek') {
+                    $this->db->set('status_teknik', 'selesai')->where_in('id', $list_id_tanah)->update('master_tanah');
+                }
 
                 if ($this->db->trans_status() === TRUE) {
                     $this->db->trans_commit();
@@ -683,7 +688,8 @@ class Ajax_laporan extends CI_Controller
 
         $data = [];
         $status = $this->input->post('status');
-        $get_data = $this->laporan->get_list_data_tanah($status);
+        $tanah = $this->input->post('tanah_id');
+        $get_data = $this->laporan->get_list_data_tanah($status, $tanah);
         $i = 1;
         foreach ($get_data as $d) {
             $row = [];
@@ -702,8 +708,8 @@ class Ajax_laporan extends CI_Controller
 
         $output = array(
             "draw" => $_POST['draw'],
-            "recordsTotal" => $this->laporan->count_all_list_tanah($status),
-            "recordsFiltered" => $this->laporan->get_filtered_list_tanah($status),
+            "recordsTotal" => $this->laporan->count_all_list_tanah($status, $tanah),
+            "recordsFiltered" => $this->laporan->get_filtered_list_tanah($status, $tanah),
             "data" => $data,
         );
         echo json_encode($output);
@@ -911,6 +917,7 @@ class Ajax_laporan extends CI_Controller
             case 'edit':
 
                 $blok = $this->input->post('blok');
+                $status = $this->input->post('status');
                 $jml_blok = count($blok);
 
                 $limit_luas = $this->input->post('lterbit');
@@ -921,7 +928,7 @@ class Ajax_laporan extends CI_Controller
                     $jml_luas += $form_luas_dft[$i];
                 }
                 $sisa_induk = $limit_luas - $jml_luas;
-                if ($sisa_induk < 0) {
+                if ($sisa_induk < 0 && $status == 'proses') {
                     $params = [
                         'status' => false,
                         'msg' => 'Total luas daftar melebihi limit luas induk',

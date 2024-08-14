@@ -75,17 +75,13 @@ $data = $this->laporan->get_data_shgb()->result();
                                                 <td>-</td>
                                                 <td>-</td>
                                             <?php } else {
+
                                                 $data_spl = $data_splitsing->row();
-                                                if ($data_spl->status == 'proses') {
-                                                    $split_proses = $data_spl->total_luas_splitsing;
-                                                    $split_terbit = '-';
-                                                } else if ($data_spl->status == 'terbit') {
-                                                    $split_proses = $data_spl->total_luas_splitsing;
-                                                    $split_terbit = $data_spl->total_luas_splitsing;
-                                                } else {
-                                                    $split_proses = '-';
-                                                    $split_terbit = '-';
-                                                }
+                                                $split_proses = $this->laporan->count_splitsing_7($d->id, 'proses')->row()->luas_splitsing;
+                                                $split_terbit = $this->laporan->count_splitsing_7($d->id, 'terbit')->row()->luas_splitsing;
+
+
+
                                             ?>
                                                 <td><?= $data_splitsing->num_rows() ?></td>
                                                 <td><?= $d->luas_terbit ?></td>
