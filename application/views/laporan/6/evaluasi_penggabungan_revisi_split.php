@@ -60,7 +60,6 @@
                                     <th class="text-white text-center">TERBIT</th>
                                     <th class="text-white text-center">BERKAS</th>
                                     <th class="text-white text-center">SHGB</th>
-
                                 </tr>
                             </thead>
                             <tbody>

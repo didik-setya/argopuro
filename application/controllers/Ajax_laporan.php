@@ -1,4 +1,7 @@
 <?php
+
+use PhpOffice\PhpSpreadsheet\Worksheet\Row;
+
 defined('BASEPATH') or exit('No direct script access allowed');
 date_default_timezone_set('Asia/Jakarta');
 class Ajax_laporan extends CI_Controller
@@ -1205,4 +1208,376 @@ class Ajax_laporan extends CI_Controller
     }
 
     //no 9 end
+
+
+
+
+
+    //no 6 start
+    public function datatable_list_tanah_6()
+    {
+        cek_ajax();
+        $kategori = $this->input->post('kategori');
+        $selected = $this->input->post('selected');
+        switch ($kategori) {
+            case 'induk':
+
+                $data = $this->laporan->get_list_tanah_6($kategori, $selected);
+                $list = [];
+                foreach ($data as $d) {
+                    $row = [];
+                    $row[] = $d->nama_proyek;
+                    $row[] = $d->no_terbit_shgb;
+                    $row[] = '';
+                    $row[] = $d->luas_terbit;
+                    $row[] = '<button onclick="add_items(\'' . $kategori . '\', \'' . $d->id . '\', \'' . $d->nama_proyek . '\', \'' . $d->no_terbit_shgb . '\', \'' . $d->luas_terbit . '\')" class="btn btn-sm btn-success"><i class="fa fa-plus"></i></button';
+                    $list[] = $row;
+                }
+                $output = array(
+                    "draw" => $_POST['draw'],
+                    "recordsTotal" => $this->laporan->get_count_list_tanah_6($kategori, $selected),
+                    "recordsFiltered" => $this->laporan->get_count_list_tanah_6($kategori, $selected),
+                    "data" => $list,
+                );
+                echo json_encode($output);
+                die;
+                break;
+            case 'sisa_induk':
+                $data = $this->laporan->get_list_tanah_6($kategori, $selected);
+                $list = [];
+                foreach ($data as $d) {
+                    $row = [];
+                    $row[] = $d->nama_proyek;
+                    $row[] = $d->no_terbit_shgb;
+                    $row[] = '';
+                    $row[] = $d->sisa_induk;
+                    $row[] = '<button onclick="add_items(\'' . $kategori . '\', \'' . $d->id . '\', \'' . $d->nama_proyek . '\', \'' . $d->no_terbit_shgb . '\', \'' . $d->sisa_induk . '\')" class="btn btn-sm btn-success"><i class="fa fa-plus"></i></button';
+                    $list[] = $row;
+                }
+                $output = array(
+                    "draw" => $_POST['draw'],
+                    "recordsTotal" => $this->laporan->get_count_list_tanah_6($kategori, $selected),
+                    "recordsFiltered" => $this->laporan->get_count_list_tanah_6($kategori, $selected),
+                    "data" => $list,
+                );
+                echo json_encode($output);
+                die;
+                break;
+            case 'splitsing':
+                $data = $this->laporan->get_list_tanah_6($kategori, $selected);
+                $list = [];
+                foreach ($data as $d) {
+                    $row = [];
+                    $row[] = $d->nama_proyek;
+                    $row[] = $d->no_shgb;
+                    $row[] = $d->blok;
+                    $row[] = $d->luas_terbit;
+                    $row[] = '<button onclick="add_items(\'' . $kategori . '\', \'' . $d->id . '\', \'' . $d->nama_proyek . '\', \'' . $d->no_shgb . '\', \'' . $d->luas_terbit . '\', \'' . $d->blok . '\')" class="btn btn-sm btn-success"><i class="fa fa-plus"></i></button';
+                    $list[] = $row;
+                }
+                $output = array(
+                    "draw" => $_POST['draw'],
+                    "recordsTotal" => $this->laporan->get_count_list_tanah_6($kategori, $selected),
+                    "recordsFiltered" => $this->laporan->get_count_list_tanah_6($kategori, $selected),
+                    "data" => $list,
+                );
+                echo json_encode($output);
+                die;
+                break;
+        }
+    }
+
+    public function dtbl_main_no_6()
+    {
+        cek_ajax();
+        $data = $this->laporan->get_dtbl_no_6();
+        $output = [];
+        $no = 1;
+        foreach ($data as $d) {
+            $row = [];
+            $row[] = '
+                <div class="dropdown">
+                    <button class="btn btn-secondary btn-sm dropdown-toggle btn-action" type="button" data-toggle="dropdown" aria-expanded="false">
+                        <i class="fa fa-cogs"></i>
+                    </button>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="#" onclick="detail_data(\'' . $d->id . '\')" >Detail</a>
+                        <a class="dropdown-item" href="#" onclick="edit_data(\'' . $d->id . '\')">Edit</a>
+                        <a class="dropdown-item" href="#" onclick="delete_data(\'' . $d->id . '\')">Hapus</a>
+                    </div>
+                </div>
+            ';
+            $row[] = $no++;
+            $row[] = $d->luas_terbit;
+            $row[] = $d->no_berkas;
+            $row[] = $d->no_shgb;
+            $row[] = tgl_indo($d->tgl_daftar);
+            $row[] = tgl_indo($d->tgl_terbit);
+            $row[] = $d->posisi;
+            $row[] = $d->status_penggabungan;
+            $row[] = $d->ket;
+            $output[] = $row;
+        }
+
+        $output = array(
+            "draw" => $_POST['draw'],
+            "recordsTotal" => $this->laporan->count_all_dtbl_6(),
+            "recordsFiltered" => $this->laporan->filtered_dtbl_6(),
+            "data" => $output,
+        );
+        echo json_encode($output);
+    }
+
+    public function action_laporan_6()
+    {
+        cek_ajax();
+        $post = $this->input->post(null, true);
+        $act = $post['action'];
+        switch ($act) {
+            case 'add':
+                $new_id = time();
+                $list_tanah = [];
+                $data_type = $this->input->post('type');
+                $c_tanah = count($data_type);
+
+                if ($c_tanah <= 0) {
+                    $params = [
+                        'status' => false,
+                        'msg' => 'Harap pilih data tanah'
+                    ];
+                    echo json_encode($params);
+                    die;
+                }
+
+                for ($i = 0; $i < $c_tanah; $i++) {
+                    $row = [
+                        'penggabungan_id' => $new_id,
+                        'induk_id' => $post['id_item'][$i],
+                        'type' => $post['type'][$i]
+                    ];
+                    $list_tanah[] = $row;
+                }
+
+                $data_penggabungan = [
+                    'id' => $new_id,
+                    'luas_terbit' => $post['luas_terbit'],
+                    'tgl_daftar' => $post['tgl_daftar'],
+                    'tgl_terbit' => $post['tgl_terbit'],
+                    'no_berkas' => $post['berkas'],
+                    'no_shgb' => $post['shgb'],
+                    'posisi' => $post['posisi'],
+                    'status_penggabungan' => $post['status_penggabungan'],
+                    'ket' => $post['keterangan']
+                ];
+
+                $this->db->trans_begin();
+
+                $this->db->insert('tbl_penggabungan_induk', $data_penggabungan);
+                $this->db->insert_batch('sub_penggabungan_induk', $list_tanah);
+
+                if ($this->db->trans_status() === FALSE) {
+                    $this->db->trans_rollback();
+                    $params = [
+                        'status' => false,
+                        'msg' => 'Penggabungan gagal di tambahkan'
+                    ];
+                } else {
+                    $this->db->trans_commit();
+                    $params = [
+                        'status' => true,
+                        'msg' => 'Penggabungan berhasil di tambahkan'
+                    ];
+                }
+                echo json_encode($params);
+                die;
+                break;
+            case 'detail':
+                $id = $post['id'];
+                $get_data = $this->db->get_where('sub_penggabungan_induk', ['penggabungan_id' => $id])->result();
+                $table_content = '';
+                if (!empty($get_data)) {
+                    $no = 1;
+                    foreach ($get_data as $d) {
+                        $qdata = $this->laporan->get_detail_6($d->type, $d->induk_id)->row();
+
+                        if ($d->type == 'splitsing') {
+                            $proyek = $qdata->nama_proyek;
+                            $shgb = $qdata->no_shgb;
+                            $blok = $qdata->blok;
+                            $ltbt = $qdata->luas_terbit;
+                            $tipe = 'Tanah Splitsing';
+                        } else if ($d->type == 'sisa_induk') {
+                            $proyek = $qdata->nama_proyek;
+                            $shgb = $qdata->no_terbit_shgb;
+                            $blok = '';
+                            $ltbt = $qdata->sisa_induk;
+                            $tipe = 'Tanah Sisa Induk';
+                        } else if ($d->type == 'induk') {
+                            $proyek = $qdata->nama_proyek;
+                            $shgb = $qdata->no_terbit_shgb;
+                            $blok = '';
+                            $ltbt = $qdata->luas_terbit;
+                            $tipe = 'Tanah Induk';
+                        }
+
+
+                        $table_content .= '
+                                <tr>
+                                    <td>' . $no++ . '</td>
+                                    <td>' . $proyek . '</td>
+                                    <td>' . $shgb . '</td>
+                                    <td>' . $blok . '</td>
+                                    <td>' . $ltbt . '</td>
+                                    <td>' . $tipe . '</td>
+                                </tr>
+                                ';
+                    }
+                } else {
+                    $table_content = '<tr><td colspan="6">No data result</td></tr>';
+                }
+
+                $table = '
+                    <table class="table table-sm table-bordered">
+                        <thead>
+                            <tr class="bg-dark text-light">
+                                <th>No</th>
+                                <th>Nama Proyek</th>
+                                <th>No. SHGB</th>
+                                <th>Blok</th>
+                                <th>Luas Surat</th>
+                                <th>Tipe Tanah</th>
+                            </tr>
+                        </thead>
+                        <tbody>' . $table_content . '</tbody>
+                    </table>
+                ';
+                echo $table;
+                break;
+            case 'get_edit':
+                $id = $this->input->post('id');
+                $data_penggabungan = $this->db->get_where('tbl_penggabungan_induk', ['id' => $id])->row();
+                $data_sub = $this->db->get_where('sub_penggabungan_induk', ['penggabungan_id' => $id])->result();
+
+                if (!empty($data_sub)) {
+                    $sub = [];
+                    foreach ($data_sub as $ds) {
+                        $qdata = $this->laporan->get_detail_6($ds->type, $ds->induk_id)->row();
+
+                        if ($ds->type == 'induk') {
+                            $blok = '';
+                            $shgb = $qdata->no_terbit_shgb;
+                            $lsurat = $qdata->luas_terbit;
+                        } else if ($ds->type == 'sisa_induk') {
+                            $blok = '';
+                            $shgb = $qdata->no_terbit_shgb;
+                            $lsurat = $qdata->sisa_induk;
+                        } else if ($ds->type == 'splitsing') {
+                            $blok = $qdata->blok;
+                            $shgb = $qdata->no_shgb;
+                            $lsurat = $qdata->luas_terbit;
+                        }
+
+                        $row = [
+                            'induk_id' => $ds->induk_id,
+                            'type' => $ds->type,
+                            'proyek' => $qdata->nama_proyek,
+                            'blok' => $blok,
+                            'shgb' => $shgb,
+                            'luas' => $lsurat
+                        ];
+                        $sub[] = $row;
+                    }
+                } else {
+                    $sub = [];
+                }
+
+                $output = [
+                    'main' => $data_penggabungan,
+                    'sub' => $sub
+                ];
+                echo json_encode($output);
+                die;
+
+                break;
+            case 'edit':
+                $id = $post['id'];
+                $list_tanah = [];
+                $data_type = $this->input->post('type');
+                $c_tanah = count($data_type);
+
+                if ($c_tanah <= 0) {
+                    $params = [
+                        'status' => false,
+                        'msg' => 'Harap pilih data tanah'
+                    ];
+                    echo json_encode($params);
+                    die;
+                }
+
+                for ($i = 0; $i < $c_tanah; $i++) {
+                    $row = [
+                        'penggabungan_id' => $id,
+                        'induk_id' => $post['id_item'][$i],
+                        'type' => $post['type'][$i]
+                    ];
+                    $list_tanah[] = $row;
+                }
+
+                $data_penggabungan = [
+                    'luas_terbit' => $post['luas_terbit'],
+                    'tgl_daftar' => $post['tgl_daftar'],
+                    'tgl_terbit' => $post['tgl_terbit'],
+                    'no_berkas' => $post['berkas'],
+                    'no_shgb' => $post['shgb'],
+                    'posisi' => $post['posisi'],
+                    'status_penggabungan' => $post['status_penggabungan'],
+                    'ket' => $post['keterangan']
+                ];
+
+                $this->db->trans_begin();
+                $this->db->where('penggabungan_id', $id)->delete('sub_penggabungan_induk');
+                $this->db->where('id', $id)->update('tbl_penggabungan_induk', $data_penggabungan);
+                $this->db->insert_batch('sub_penggabungan_induk', $list_tanah);
+
+                if ($this->db->trans_status() === FALSE) {
+                    $this->db->trans_rollback();
+                    $params = [
+                        'status' => false,
+                        'msg' => 'Penggabungan gagal di edit'
+                    ];
+                } else {
+                    $this->db->trans_commit();
+                    $params = [
+                        'status' => true,
+                        'msg' => 'Penggabungan berhasil di edit'
+                    ];
+                }
+                echo json_encode($params);
+                die;
+                break;
+            case 'delete':
+                $id = $this->input->post('id');
+                $this->db->trans_begin();
+
+                $this->db->where('penggabungan_id', $id)->delete('sub_penggabungan_induk');
+                $this->db->where('id', $id)->delete('tbl_penggabungan_induk');
+
+                if ($this->db->trans_status() === FALSE) {
+                    $this->db->trans_rollback();
+                    $params = [
+                        'status' => false,
+                        'msg' => 'Penggabungan gagal di hapus'
+                    ];
+                } else {
+                    $this->db->trans_commit();
+                    $params = [
+                        'status' => true,
+                        'msg' => 'Penggabungan berhasil di hapus'
+                    ];
+                }
+                echo json_encode($params);
+                break;
+        }
+    }
+    //no 6 end
 }

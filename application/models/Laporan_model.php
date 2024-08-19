@@ -851,206 +851,267 @@ class Laporan_model extends CI_Model
 
     //LAPORAN NO 5 END
 
-    //LAPORAN NO 6 START
-    public function get_evaluasi_revisi_split($proyek_id = '', $new_year = '', $old_year = '', $id_penggabungan = null, $status = null)
+    //LAPORAN NO 6 START baru
+    private function get_data_has_added_6($kategori = null)
     {
-
         $this->db->select('
-            tbl_penggabungan_induk.*,
-            tbl_penggabungan_induk.id as id_penggabungan_induk,
-            tbl_penggabungan_induk.ket as ket_penggabungan,
-            master_tanah.*,
-            master_proyek.nama_proyek,
-            tbl_proses_induk.luas_terbit as luas_daftar
+        sub_penggabungan_induk.*
         ')
-            ->from('tbl_penggabungan_induk');
-        $this->db->join('sub_penggabungan_induk', 'sub_penggabungan_induk.penggabungan_id = tbl_penggabungan_induk.id', 'left');
-        $this->db->join('tbl_proses_induk', 'tbl_proses_induk.id = sub_penggabungan_induk.induk_id', 'left');
-        $this->db->join('sub_proses_induk', 'sub_proses_induk.induk_id = tbl_proses_induk.id', 'left');
-        $this->db->join('master_tanah', 'master_tanah.id = sub_proses_induk.tanah_id', 'left');
-        $this->db->join('master_proyek', 'master_proyek.id = master_tanah.proyek_id', 'left');
-        $this->db->group_by('sub_penggabungan_induk.penggabungan_id');
-
-        if (!empty($new_year) and !empty($old_year)) {
-            $this->db->where('tbl_penggabungan_induk.created_at BETWEEN "' . $new_year . '" and "' . $old_year . '"');
-        }
-        if (!empty($proyek_id)) {
-            $this->db->where('master_tanah.proyek_id', $proyek_id);
+            ->from('sub_penggabungan_induk')
+            ->join('tbl_penggabungan_induk', 'sub_penggabungan_induk.penggabungan_id = tbl_penggabungan_induk.id');
+        if ($kategori) {
+            $this->db->where('sub_penggabungan_induk.type', $kategori);
         }
 
-        if ($id_penggabungan) {
-            $this->db->where('tbl_penggabungan_induk.id', $id_penggabungan);
-        }
+        $get_data = $this->db->get()->result();
 
-        if ($status) {
-            $this->db->where('master_tanah.status_proyek', $status);
-        }
-
-        return $this->db->get();
-    }
-
-    public function get_rekap_penggabungan_split($new_year = null, $old_year = null, $proyek = null, $status = null, $type = null, $st_proyek = null)
-    {
-
-
-        if ($status && $type) {
-            if ($type == 'luas') {
-                if ($status == 'proses') {
-                    $this->db->select('SUM(master_tanah.luas_surat) AS luas_terbit');
-                } else if ($status == 'terbit') {
-                    $this->db->select('SUM(tbl_penggabungan_induk.luas_terbit) AS luas_terbit');
-                }
-            } else if ($type == 'bid') {
-                $this->db->select('tbl_penggabungan_induk.*');
+        if (!empty($get_data)) {
+            $output = [];
+            foreach ($get_data as $gd) {
+                $output[] =  $gd->induk_id;
             }
         } else {
+            $output = null;
+        }
+        return $output;
+    }
+
+    public function query_list_tanah_6($kategori = null, $selected = null, $id = null)
+    {
+        $has_added = $this->get_data_has_added_6($kategori);
+
+        if ($kategori == 'induk') {
+
+            $data_sudah = $this->db->select('induk_id')->group_by('induk_id')->get('tbl_splitsing')->result();
+            $dt = [];
+            foreach ($data_sudah as $ds) {
+                $dt[] = $ds->induk_id;
+            }
+
             $this->db->select('
-                    tbl_penggabungan_induk.*,
-                    tbl_penggabungan_induk.id as id_penggabungan_induk,
-                    tbl_penggabungan_induk.ket as ket_penggabungan,
-                    master_tanah.*,
-                    master_proyek.nama_proyek,
-                    tbl_proses_induk.luas_terbit as luas_daftar
-            ');
-        }
-
-
-        $this->db->from('tbl_penggabungan_induk');
-        $this->db->join('sub_penggabungan_induk', 'sub_penggabungan_induk.penggabungan_id = tbl_penggabungan_induk.id', 'left');
-        $this->db->join('tbl_proses_induk', 'tbl_proses_induk.id = sub_penggabungan_induk.induk_id', 'left');
-        $this->db->join('sub_proses_induk', 'sub_proses_induk.induk_id = tbl_proses_induk.id', 'left');
-        $this->db->join('master_tanah', 'master_tanah.id = sub_proses_induk.tanah_id', 'left');
-        $this->db->join('master_proyek', 'master_proyek.id = master_tanah.proyek_id', 'left');
-
-        if ($proyek) {
-            $this->db->where(
-                'master_proyek.id',
-                $proyek
-            );
-        }
-
-        if ($status) {
-            $this->db->where('tbl_penggabungan_induk.status_penggabungan', $status);
-        }
-
-        if ($old_year) {
-            $this->db->where('year(tbl_penggabungan_induk.created_at) <=', $old_year);
-        }
-
-        if ($new_year) {
-            $this->db->where(
-                'year(tbl_penggabungan_induk.created_at)',
-                $new_year
-            );
-        }
-
-        if ($st_proyek) {
-            $this->db->where('master_tanah.status_proyek', $st_proyek);
-        }
-
-        if (!$status) {
-            $this->db->group_by('master_proyek.id');
-        }
-
-
-
-        return $this->db->get();
-    }
-
-    public function count_bidluas_rekap(
-        $proyek = null,
-        $type = null,
-        $status = null,
-        $new_year = null,
-        $old_year = null
-    ) {
-
-        if ($type && $type == 'luas') {
-            if ($status == 'proses') {
-                $this->db->select('SUM(master_tanah.luas_surat) as luas_terbit');
-            } else if ($status == 'terbit') {
-                $this->db->select('SUM(tbl_penggabungan_induk.luas_terbit) as luas_terbit');
+                tbl_proses_induk.id,
+                tbl_proses_induk.no_terbit_shgb,
+                tbl_proses_induk.luas_terbit,
+                master_proyek.nama_proyek
+            ')
+                ->from('tbl_proses_induk')
+                ->join('sub_proses_induk', 'tbl_proses_induk.id = sub_proses_induk.induk_id')
+                ->join('master_tanah', 'sub_proses_induk.tanah_id = master_tanah.id')
+                ->join('master_proyek', 'master_tanah.proyek_id = master_proyek.id')
+                ->group_by('tbl_proses_induk.id')
+                ->where('tbl_proses_induk.status_induk', 'terbit')
+                ->where('tbl_proses_induk.status_tanah', 'tanah_proyek');
+            if ($data_sudah) {
+                $this->db->where_not_in('tbl_proses_induk.id', $dt);
             }
-        } else {
-            $this->db->select('tbl_penggabungan_induk.ket as ket_real');
+
+            if ($selected) {
+                $this->db->where_not_in('tbl_proses_induk.id', $selected);
+            }
+
+            if ($has_added) {
+                $this->db->where_not_in('tbl_proses_induk.id', $has_added);
+            }
+
+            if ($id) {
+                $this->db->where('tbl_proses_induk.id', $id);
+                return $this->db->get();
+            }
+        } else if ($kategori == 'sisa_induk') {
+            $this->db->select('
+                tbl_proses_induk.id,
+                tbl_proses_induk.no_terbit_shgb,
+                tbl_proses_induk.sisa_induk,
+                master_proyek.nama_proyek
+            ')
+                ->from('tbl_proses_induk')
+                ->join('tbl_splitsing', 'tbl_proses_induk.id = tbl_splitsing.induk_id')
+                ->join('sub_proses_induk', 'tbl_proses_induk.id = sub_proses_induk.induk_id')
+                ->join('master_tanah', 'sub_proses_induk.tanah_id = master_tanah.id')
+                ->join('master_proyek', 'master_tanah.proyek_id = master_proyek.id')
+                ->group_by('tbl_proses_induk.id')
+                ->where('tbl_proses_induk.status_induk', 'terbit')
+                ->where('tbl_proses_induk.status_tanah', 'tanah_proyek')
+                ->where('tbl_proses_induk.sisa_induk >', 0);
+            if ($selected) {
+                $this->db->where_not_in('tbl_proses_induk.id', $selected);
+            }
+
+
+            if ($has_added) {
+                $this->db->where_not_in('tbl_proses_induk.id', $has_added);
+            }
+
+            if ($id) {
+                $this->db->where('tbl_proses_induk.id', $id);
+                return $this->db->get();
+            }
+        } else if ($kategori == 'splitsing') {
+            $this->db->select('
+                sub_splitsing.id,
+                sub_splitsing.blok,
+                sub_splitsing.luas_terbit,
+                sub_splitsing.no_shgb,
+                master_proyek.nama_proyek
+            ')
+                ->from('sub_splitsing')
+                ->join('tbl_splitsing', 'sub_splitsing.splitsing_id = tbl_splitsing.id')
+                ->join('tbl_proses_induk', 'tbl_splitsing.induk_id = tbl_proses_induk.id')
+                ->join('sub_proses_induk', 'tbl_proses_induk.id = sub_proses_induk.induk_id')
+                ->join('master_tanah', 'sub_proses_induk.tanah_id = master_tanah.id')
+                ->join('master_proyek', 'master_tanah.proyek_id = master_proyek.id')
+                ->where('tbl_splitsing.status', 'terbit')
+                ->group_by('sub_splitsing.id');
+            if ($selected) {
+                $this->db->where_not_in('sub_splitsing.id', $selected);
+            }
+
+            if ($has_added) {
+                $this->db->where_not_in('sub_splitsing.id', $has_added);
+            }
+
+            if ($id) {
+                $this->db->where('sub_splitsing.id', $id);
+                return $this->db->get();
+            }
         }
-
-        $this->db->from('tbl_penggabungan_induk');
-        $this->db->join('sub_penggabungan_induk', 'sub_penggabungan_induk.penggabungan_id = tbl_penggabungan_induk.id');
-        $this->db->join('tbl_proses_induk', 'tbl_proses_induk.id = sub_penggabungan_induk.induk_id');
-        $this->db->join('sub_proses_induk', 'sub_proses_induk.induk_id = tbl_proses_induk.id');
-        $this->db->join('master_tanah', 'master_tanah.id = sub_proses_induk.tanah_id');
-        $this->db->join('master_proyek', 'master_proyek.id = master_tanah.proyek_id');
-
-
-        if ($proyek) {
-            $this->db->where(
-                'master_proyek.id',
-                $proyek
-            );
-        }
-
-        if ($status) {
-            $this->db->where('tbl_penggabungan_induk.status_penggabungan', $status);
-        }
-
-        if ($old_year) {
-            $this->db->where('year(tbl_penggabungan_induk.created_at) <=', $old_year);
-        }
-
-        if ($new_year) {
-            $this->db->where(
-                'year(tbl_penggabungan_induk.created_at)',
-                $new_year
-            );
-        }
-
-        return $this->db->get();
     }
 
-    //no 6 soko aku
-    public function get_list_tambah_tanah_induk()
+    public function get_list_tanah_6($kategori = null, $selected = null)
     {
-        $this->db->select('
-            master_proyek.nama_proyek,
-            master_tanah.nama_penjual,
-            tbl_proses_induk.id,
-            tbl_proses_induk.no_terbit_shgb,
-            tbl_proses_induk.luas_terbit
-        ')
-            ->from('tbl_proses_induk')
-            ->join('sub_proses_induk', 'tbl_proses_induk.id = sub_proses_induk.induk_id')
-            ->join('master_tanah', 'sub_proses_induk.tanah_id = master_tanah.id')
-            ->join('master_proyek', 'master_tanah.proyek_id = master_proyek.id')
-            ->where('tbl_proses_induk.status_induk', 'terbit')
-            ->group_by('sub_proses_induk.induk_id');
+        $this->query_list_tanah_6($kategori, $selected);
+        if ($_POST['length'] != -1)
+            $this->db->limit($_POST['length'], $_POST['start']);
+        $query = $this->db->get();
+        return $query->result();
+    }
+
+    public function get_count_list_tanah_6($kategori = null, $selected = null)
+    {
+        $this->query_list_tanah_6($kategori, $selected);
+        $query = $this->db->get();
+        return $query->num_rows();
+    }
+
+    public function get_detail_6($kategori = null, $id = null)
+    {
+        if ($kategori == 'induk') {
+            $this->db->select('
+                tbl_proses_induk.id,
+                tbl_proses_induk.no_terbit_shgb,
+                tbl_proses_induk.luas_terbit,
+                master_proyek.nama_proyek
+            ')
+                ->from('tbl_proses_induk')
+                ->join('sub_proses_induk', 'tbl_proses_induk.id = sub_proses_induk.induk_id')
+                ->join('master_tanah', 'sub_proses_induk.tanah_id = master_tanah.id')
+                ->join('master_proyek', 'master_tanah.proyek_id = master_proyek.id')
+                ->group_by('tbl_proses_induk.id');
+            if ($id) {
+                $this->db->where('tbl_proses_induk.id', $id);
+            }
+        } else if ($kategori == 'sisa_induk') {
+            $this->db->select('
+                tbl_proses_induk.id,
+                tbl_proses_induk.no_terbit_shgb,
+                tbl_proses_induk.sisa_induk,
+                master_proyek.nama_proyek
+            ')
+                ->from('tbl_proses_induk')
+                ->join('tbl_splitsing', 'tbl_proses_induk.id = tbl_splitsing.induk_id')
+                ->join('sub_proses_induk', 'tbl_proses_induk.id = sub_proses_induk.induk_id')
+                ->join('master_tanah', 'sub_proses_induk.tanah_id = master_tanah.id')
+                ->join('master_proyek', 'master_tanah.proyek_id = master_proyek.id')
+                ->group_by('tbl_proses_induk.id');
+
+            if ($id) {
+                $this->db->where('tbl_proses_induk.id', $id);
+            }
+        } else if ($kategori == 'splitsing') {
+            $this->db->select('
+                sub_splitsing.id,
+                sub_splitsing.blok,
+                sub_splitsing.luas_terbit,
+                sub_splitsing.no_shgb,
+                master_proyek.nama_proyek
+            ')
+                ->from('sub_splitsing')
+                ->join('tbl_splitsing', 'sub_splitsing.splitsing_id = tbl_splitsing.id')
+                ->join('tbl_proses_induk', 'tbl_splitsing.induk_id = tbl_proses_induk.id')
+                ->join('sub_proses_induk', 'tbl_proses_induk.id = sub_proses_induk.induk_id')
+                ->join('master_tanah', 'sub_proses_induk.tanah_id = master_tanah.id')
+                ->join('master_proyek', 'master_tanah.proyek_id = master_proyek.id')
+                ->group_by('sub_splitsing.id');
+
+            if ($id) {
+                $this->db->where('sub_splitsing.id', $id);
+            }
+        }
+
         return $this->db->get();
     }
 
-    public function list_penggabungan_induk($id)
+
+
+
+
+
+    private function query_dtbl_no_6()
     {
-        $this->db->select('
-            master_proyek.nama_proyek,
-            master_tanah.nama_penjual,
-            tbl_proses_induk.id,
-            tbl_proses_induk.no_terbit_shgb,
-            tbl_proses_induk.luas_terbit,
-            sub_penggabungan_induk.blok,
-            sub_penggabungan_induk.penggabungan_id,
-            sub_penggabungan_induk.induk_id
-        ')
-            ->from('tbl_proses_induk')
-            ->join('sub_proses_induk', 'tbl_proses_induk.id = sub_proses_induk.induk_id')
-            ->join('master_tanah', 'sub_proses_induk.tanah_id = master_tanah.id')
-            ->join('master_proyek', 'master_tanah.proyek_id = master_proyek.id')
-            ->join('sub_penggabungan_induk', 'sub_penggabungan_induk.induk_id = tbl_proses_induk.id')
-            ->where('tbl_proses_induk.status_induk', 'terbit')
-            ->where('sub_penggabungan_induk.penggabungan_id', $id)
-            ->group_by('sub_proses_induk.induk_id');
-        return $this->db->get();
+        $this->db->select('tbl_penggabungan_induk.*')
+            ->from('tbl_penggabungan_induk')
+            ->join('sub_penggabungan_induk', 'tbl_penggabungan_induk.id = sub_penggabungan_induk.penggabungan_id')
+            ->group_by('tbl_penggabungan_induk.id');
     }
+
+    private function filter_query_no_6()
+    {
+        $this->query_dtbl_no_6();
+        $search = ['no_berkas', 'no_shgb', 'posisi', 'ket'];
+        $i = 0;
+        foreach ($search as $item) {
+            if ($_POST['search']['value']) {
+                if ($i === 0) {
+                    $this->db->group_start();
+                    $this->db->like($item, $_POST['search']['value']);
+                } else {
+                    $this->db->or_like($item, $_POST['search']['value']);
+                }
+
+                if (count($search) - 1 == $i) {
+                    $this->db->group_end();
+                }
+            }
+            $i++;
+        }
+    }
+
+    public function get_dtbl_no_6()
+    {
+        $this->filter_query_no_6();
+        if ($_POST['length'] != -1)
+            $this->db->limit($_POST['length'], $_POST['start']);
+        $query = $this->db->get();
+        return $query->result();
+    }
+
+    public function filtered_dtbl_6()
+    {
+        $this->filter_query_no_6();
+        $query = $this->db->get();
+        return $query->num_rows();
+    }
+
+    public function count_all_dtbl_6()
+    {
+        $this->query_dtbl_no_6();
+        return $this->db->count_all_results();
+    }
+
 
     //LAPORAN NO 6 END
+
+
     //LAPORAN NO 7 START
     public function get_data_shgb($proyek_id = null, $year = null)
     {

@@ -441,12 +441,12 @@ class Dashboard extends CI_Controller
 
         $data = [
             'title' => 'Evaluasi Rekap Penggabungan Induk',
-            'tanah_proyek' => $this->db->get('master_proyek')->result(),
-            'data_old' => $this->laporan->get_evaluasi_revisi_split($proyek_id, '1970-01-01', (date('Y') - 1) . '-12-31', null, $status)->result(),
-            'data_new' => $this->laporan->get_evaluasi_revisi_split($proyek_id, date('Y' . '-01-01'), date('Y') . '-12-31', null, $status)->result(),
+            // 'tanah_proyek' => $this->db->get('master_proyek')->result(),
+            // 'data_old' => $this->laporan->get_evaluasi_revisi_split($proyek_id, '1970-01-01', (date('Y') - 1) . '-12-31', null, $status)->result(),
+            // 'data_new' => $this->laporan->get_evaluasi_revisi_split($proyek_id, date('Y' . '-01-01'), date('Y') . '-12-31', null, $status)->result(),
+            // 'data_list' => $this->laporan->get_list_tambah_tanah_induk()->result(),
             'user' => get_user(),
-            'data_list' => $this->laporan->get_list_tambah_tanah_induk()->result(),
-            'view' => 'laporan/6/evaluasi_penggabungan_revisi_split'
+            'view' => 'laporan/6/new_evaluasi'
         ];
         $this->load->view('dashboard', $data);
     }
