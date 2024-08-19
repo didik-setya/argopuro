@@ -81,7 +81,7 @@
                 <div class="row">
                     <div class="form-group col-lg-4 col-md-6 my-2">
                         <label><b>Luas Terbit</b></label>
-                        <input type="text" name="luas_terbit" id="luas_terbit" class="form-control" required>
+                        <input type="number" name="luas_terbit" id="luas_terbit" class="form-control">
                     </div>
 
                     <div class="form-group col-lg-4 col-md-6 my-2">
