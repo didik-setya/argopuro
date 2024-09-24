@@ -48,38 +48,7 @@ $proyek = $this->db->get('master_proyek')->result();
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php $i = 1;
-                                foreach ($proyek as $p) {
-                                    $jml_lastyear = $this->laporan->data_rekap_9(null, $last_year, null, null, null, $p->id)->num_rows();
-                                    $jml_thisyear = $this->laporan->data_rekap_9($this_year, null, null, null, null, $p->id)->num_rows();
-                                    $jml_evaluasi_belum = $this->laporan->data_rekap_9(null, null, 'belum proses', null, null, $p->id)->num_rows();
-                                    $jml_evaluasi_proses = $this->laporan->data_rekap_9(null, null, 'proses', null, null, $p->id)->num_rows();
-                                    $jml_ = $jml_lastyear + $jml_thisyear;
-                                ?>
-                                    <tr>
-                                        <td><?= $i++ ?></td>
-                                        <td><?= $p->nama_proyek ?></td>
-                                        <td><?= $jml_lastyear ?></td>
-                                        <td><?= $jml_thisyear ?></td>
-                                        <td><?= $jml_ ?></td>
 
-                                        <?php
-                                        $total_tbt_split = 0;
-                                        foreach ($month as $bln) {
-                                            $terbit_split = $this->laporan->data_rekap_9(null, null, 'terbit', $bln['val'], $this_year, $p->id)->num_rows();
-                                            $total_tbt_split += $terbit_split;
-
-                                            echo '<td>' . $terbit_split . '</td>';
-                                        }
-                                        $sisa_hutang = $jml_ - $total_tbt_split;
-                                        echo '<td>' . $total_tbt_split . '</td>';
-                                        echo '<td>' . $sisa_hutang . '</td>';
-                                        ?>
-
-                                        <td><?= $jml_evaluasi_proses ?></td>
-                                        <td><?= $jml_evaluasi_belum ?></td>
-                                    </tr>
-                                <?php } ?>
                             </tbody>
                         </table>
 
