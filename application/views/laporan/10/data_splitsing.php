@@ -6,8 +6,6 @@ $last_year = date('Y', strtotime('-1 year'));
 $this_year = date('Y');
 $data = $this->laporan->get_data_10($f_year, $f_perum)->result();
 $data_proyek = $this->db->get('master_proyek')->result();
-
-
 ?>
 
 <style>
@@ -31,6 +29,7 @@ $data_proyek = $this->db->get('master_proyek')->result();
             <div class="col-12">
 
                 <button class="btn btn-sm btn-dark" onclick="filter_data()"><i class="fa fa-filter"></i> Filter</button>
+                <button class="btn btn-sm btn-primary" onclick="add_stock()"><i class="fa fa-plus"></i> Tambah Stok</button>
 
 
                 <div class="card mt-3">
@@ -224,6 +223,27 @@ $data_proyek = $this->db->get('master_proyek')->result();
     </div>
 </div>
 
+<!-- Modal -->
+<div class="modal" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-light">
+                <h5 class="modal-title" id="exampleModalLabel">Tambah Stok</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="text-light">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                ...
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     $('#main_table thead tr th').addClass('text-center text-nowrap')
     $('#main_table').dataTable({
@@ -235,6 +255,17 @@ $data_proyek = $this->db->get('master_proyek')->result();
         // e.preventDefault()
         loading_animation()
     })
+
+    function add_stock() {
+        $('#exampleModal').modal('show')
+    }
+
+
+
+
+
+
+
 
     function filter_data() {
         $('#modalFilter').modal('show')

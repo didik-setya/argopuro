@@ -301,7 +301,7 @@ $data_splitsing_ly = $this->laporan->get_data_evaluasi_splitsing(null, $last_yea
                             <div class="form-group my-1" id="to_select_induk">
                                 <label>Induk</label>
                                 <select name="induk" id="select_induk" class="form-control" required>
-                                    <option value="">--pilih--</option>
+                                    <option value="">--pilih induk--</option>
                                     <?php foreach ($data_penggabungan as $dp) { ?>
                                         <option value="<?= $dp->id ?>"><?= $dp->no_daftar_shgb ?></option>
                                     <?php } ?>

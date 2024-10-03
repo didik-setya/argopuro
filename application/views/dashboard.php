@@ -36,6 +36,13 @@
             background-color: rgba(0, 0, 0, 0.8);
             opacity: 1 !important;
         }
+
+        .modal-fullscreen {
+            width: 100vw;
+            max-width: none;
+            height: 100vh;
+            margin: 0;
+        }
     </style>
 </head>
 
@@ -184,6 +191,11 @@
     <!-- <script src="<?= base_url('assets') ?>/dist/js/demo.js"></script> -->
     <script>
         // cookie
+        $(function() {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+
+
         function createCookie(name, value, days) {
             var expires;
             if (days) {

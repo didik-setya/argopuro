@@ -1580,4 +1580,316 @@ class Ajax_laporan extends CI_Controller
         }
     }
     //no 6 end
+
+
+
+
+
+
+    //no 10
+    public function act_splitsing_10()
+    {
+        cek_ajax();
+        $act = $this->input->post('act');
+        switch ($act) {
+            case 'add':
+                $new_id = time();
+                $induk_id = $this->input->post('induk');
+                $luas_induk = $this->input->post('luas');
+                $blok = $this->input->post('blok');
+                $type = $this->input->post('type');
+                $luas_blok = $this->input->post('luas_blok');
+
+                $count_blok = count($blok);
+                $total_luas_blok = 0;
+                $data_sub_splitsing = [];
+                for ($i = 0; $i < $count_blok; $i++) {
+                    $total_luas_blok += $luas_blok[$i];
+                    $row = [
+                        'splitsing_id' => $new_id,
+                        'blok' => $blok[$i],
+                        'luas_daftar' => $luas_blok[$i],
+                        'tipe' => $type[$i]
+                    ];
+                    $data_sub_splitsing[] = $row;
+                }
+
+                $sisa_induk = $luas_induk - $total_luas_blok;
+
+                $data_splitsing = [
+                    'id' => $new_id,
+                    'induk_id' => $induk_id,
+                    'total_luas_splitsing' => $total_luas_blok,
+                    'sisa_induk' => $sisa_induk,
+                    'data_locked' => 0,
+                    'create_at' => date('Y-m-d')
+                ];
+
+
+                if ($sisa_induk < 0) {
+                    $params = [
+                        'status' => false,
+                        'msg' => 'Total luas melebihi luas induk'
+                    ];
+                } else {
+                    $this->db->trans_begin();
+
+                    $this->db->set('sisa_induk', $sisa_induk)->where('id', $induk_id)->update('tbl_proses_induk');
+                    $this->db->insert('tbl_splitsing', $data_splitsing);
+                    $this->db->insert_batch('sub_splitsing', $data_sub_splitsing);
+
+                    if ($this->db->trans_status() === FALSE) {
+                        $this->db->trans_rollback();
+                        $params = [
+                            'status' => false,
+                            'msg' => 'Data gagal di tambahkan'
+                        ];
+                    } else {
+                        $this->db->trans_commit();
+                        $params = [
+                            'status' => true,
+                            'msg' => 'Data berhasil di tambahkan'
+                        ];
+                    }
+                }
+                echo json_encode($params);
+                die;
+                break;
+            case 'edit':
+                $id = $this->input->post('id');
+                $luas_induk = $this->input->post('luas');
+
+                $new_blok = $this->input->post('blok');
+                $new_type = $this->input->post('type');
+                $b_split_new = $this->input->post('luas_blok');
+
+                $now_blok = $this->input->post('blok_edit');
+                $now_type = $this->input->post('type_blok_edit');
+                $b_split_now = $this->input->post('luas_blok_edit');
+                $id_splitsing = $this->input->post('id_splitsing');
+
+
+                $c_split_now = count($b_split_now);
+
+                if ($b_split_new) {
+                    $c_split_new = count($b_split_new);
+                }
+
+
+                $l_split_now = 0;
+                $l_split_new = 0;
+                $data_new_split = [];
+                for ($a = 0; $a < $c_split_now; $a++) {
+                    $l_split_now += $b_split_now[$a];
+                }
+                if ($b_split_new) {
+                    for ($b = 0; $b < $c_split_new; $b++) {
+                        $l_split_new += $b_split_new[$b];
+
+                        $row = [
+                            'splitsing_id' => $id,
+                            'blok' => $new_blok[$b],
+                            'luas_daftar' => $b_split_new[$b],
+                            'tipe' => $new_type[$b]
+                        ];
+                        $data_new_split[] = $row;
+                    }
+                }
+
+                $total_luas_split = $l_split_now + $l_split_new;
+                $sisa_induk = $luas_induk - $total_luas_split;
+
+
+                if ($sisa_induk < 0) {
+                    $params = [
+                        'status' => false,
+                        'msg' => 'Total luas melebihi luas induk'
+                    ];
+                } else {
+                    $this->db->trans_begin();
+                    $get_data_splitsing = $this->db->get_where('tbl_splitsing', ['id' => $id])->row();
+                    $id_induk = $get_data_splitsing->induk_id;
+
+
+                    $this->db->set('sisa_induk', $sisa_induk)->where('id', $id_induk)->update('tbl_proses_induk');
+                    $this->db->set('sisa_induk', $sisa_induk)->set('total_luas_splitsing', $total_luas_split)->where('id', $id)->update('tbl_splitsing');
+                    if ($b_split_new) {
+                        $this->db->insert_batch('sub_splitsing', $data_new_split);
+                    }
+                    for ($i = 0; $i < $c_split_now; $i++) {
+                        $update_split = [
+                            'blok' => $now_blok[$i],
+                            'luas_daftar' => $b_split_now[$i],
+                            'tipe' => $now_type[$i]
+                        ];
+                        $id_has_split = $id_splitsing[$i];
+                        $this->db->where('id', $id_has_split)->update('sub_splitsing', $update_split);
+                    }
+
+
+                    if ($this->db->trans_status() === FALSE) {
+                        $this->db->trans_rollback();
+                        $params = [
+                            'status' => false,
+                            'msg' => 'Data gagal di ubah'
+                        ];
+                    } else {
+                        $this->db->trans_commit();
+                        $params = [
+                            'status' => true,
+                            'msg' => 'Data berhasil di ubah'
+                        ];
+                    }
+                }
+
+
+
+                echo json_encode($params);
+                die;
+                break;
+            case 'get_data_edit':
+                $id = $this->input->post('id');
+                $data_splitsing = $this->laporan->get_data_has_splitsing($id)->row();
+                $splitsing = $this->db->get_where('sub_splitsing', ['splitsing_id' => $id])->result();
+
+                $output = [
+                    'data' => $data_splitsing,
+                    'splitsing' => $splitsing
+                ];
+
+                echo json_encode($output);
+                die;
+                break;
+            case 'delete_split':
+                $id = $this->input->post('id');
+                $subsplit = $this->db->where('id', $id)->get('sub_splitsing')->row();
+                $data = $this->db->where('id', $subsplit->splitsing_id)->get('tbl_splitsing')->row();
+
+                $new_sisa = $data->sisa_induk + $subsplit->luas_daftar;
+                $new_total = $data->total_luas_splitsing - $subsplit->luas_daftar;
+
+                $update_splitsing = [
+                    'total_luas_splitsing' => $new_total,
+                    'sisa_induk' => $new_sisa
+                ];
+
+                $this->db->trans_begin();
+
+                $this->db->where('id', $data->id)->update('tbl_splitsing', $update_splitsing);
+                $this->db->where('id', $id)->delete('sub_splitsing');
+                $this->db->set('sisa_induk', $new_sisa)->where('id', $data->induk_id)->update('tbl_proses_induk');
+
+                if ($this->db->trans_status() === FALSE) {
+                    $this->db->trans_rollback();
+                    $params = [
+                        'status' => false,
+                        'msg' => 'Data gagal di hapus',
+                        'id' => $data->id
+                    ];
+                } else {
+                    $this->db->trans_commit();
+                    $params = [
+                        'status' => true,
+                        'msg' => 'Data berhasil di hapus',
+                        'id' => $data->id
+                    ];
+                }
+                echo json_encode($params);
+                die;
+                break;
+            case 'get_data_detail':
+                $id = $this->input->post('id');
+                $data_splitsing = $this->laporan->get_detail_data_splitsing($id)->result();
+                $html_output = '';
+                $no = 1;
+                foreach ($data_splitsing as $ds) {
+                    $l_teknik = $ds->luas_daftar;
+                    $l_terbit = $ds->luas_terbit;
+                    $l_selisih = $l_teknik - $l_terbit;
+                    $tgl_daftar = tgl_indo($ds->tgl_daftar);
+                    $tgl_terbit = tgl_indo($ds->tgl_terbit);
+                    $batas_hgb = tgl_indo($ds->masa_berlaku);
+
+                    $html_output .= '
+                        <tr>
+                            <td>' . $no . '</td>
+                            <td>' . $ds->nama_proyek . '</td>
+                            <td>' . $ds->blok . '</td>
+                            <td>1</td>
+                            <td>' . $l_teknik . '</td>
+                            <td>' . $l_terbit . '</td>
+                            <td>' . $l_selisih . '</td>
+                            <td>' . $ds->no_induk . '</td>
+                            <td>' . $ds->no_shgb . '</td>
+                            <td>' . $tgl_daftar . '</td>
+                            <td>' . $tgl_terbit . '</td>
+                            <td>' . $batas_hgb . '</td>
+                        </tr>
+                    ';
+                    $no++;
+                }
+                echo $html_output;
+                die;
+                break;
+            case 'key_data':
+                $id = $this->input->post('id');
+                $type = $this->input->post('type');
+
+                if ($type == 1) {
+                    //lock
+                    $this->db->set('data_locked', 1);
+                } else {
+                    //unlock
+                    $this->db->set('data_locked', 0);
+                }
+                $this->db->where('id', $id)->update('tbl_splitsing');
+                if ($this->db->affected_rows() > 0) {
+                    $params = [
+                        'status' => true,
+                        'msg' => 'Data berhasil di ubah'
+                    ];
+                } else {
+                    $params = [
+                        'status' => false,
+                        'msg' => 'Data gagal di ubah'
+                    ];
+                }
+                echo json_encode($params);
+                die;
+                break;
+            case 'delete_data':
+                $id = $this->input->post('id');
+                $get_splitsing = $this->db->get_where('tbl_splitsing', ['id' => $id])->row();
+                $luas_split = $get_splitsing->total_luas_splitsing;
+                $sisa_split = $get_splitsing->sisa_induk;
+                $id_induk = $get_splitsing->induk_id;
+
+                $recovery_sisa = $luas_split + $sisa_split;
+
+
+                $this->db->trans_begin();
+
+                $this->db->set('sisa_induk', $recovery_sisa)->where('id', $id_induk)->update('tbl_proses_induk');
+                $this->db->where('id', $id)->delete('tbl_splitsing');
+                $this->db->where('splitsing_id', $id)->delete('sub_splitsing');
+
+                if ($this->db->trans_status() === FALSE) {
+                    $this->db->trans_rollback();
+                    $params = [
+                        'status' => false,
+                        'msg' => 'Data gagal di hapus'
+                    ];
+                } else {
+                    $this->db->trans_commit();
+                    $params = [
+                        'status' => true,
+                        'msg' => 'Data berhasil di hapus'
+                    ];
+                }
+                echo json_encode($params);
+                die;
+                break;
+        }
+    }
+    //end no 10
 }

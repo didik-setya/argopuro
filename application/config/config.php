@@ -1,6 +1,15 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
-
+$config['type_splitsing'] = [
+    [
+        'name' => 'Jalan & Fasos',
+        'value' => 'jf'
+    ],
+    [
+        'name' => 'Splitsing',
+        'value' => 'sp'
+    ],
+];
 /*
 |--------------------------------------------------------------------------
 | Base Site URL

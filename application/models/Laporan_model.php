@@ -1297,9 +1297,40 @@ class Laporan_model extends CI_Model
         }
 
         if ($data_sudah) {
-            $data = $this->db->select('id, no_terbit_shgb, luas_terbit')->where_not_in('id', $dt)->where('status_induk', 'terbit')->where('status_tanah', 'tanah_proyek')->get('tbl_proses_induk');
+            $data = $this->db->select('
+            tbl_proses_induk.id, 
+            tbl_proses_induk.no_terbit_shgb, 
+            tbl_proses_induk.luas_terbit, 
+            master_proyek.nama_proyek
+            ')
+                ->from('tbl_proses_induk')
+                ->join('sub_proses_induk', 'tbl_proses_induk.id = sub_proses_induk.induk_id')
+                ->join('master_tanah', 'sub_proses_induk.tanah_id = master_tanah.id')
+                ->join('master_proyek', 'master_tanah.proyek_id = master_proyek.id')
+
+                ->where_not_in('tbl_proses_induk.id', $dt)
+                ->where('status_induk', 'terbit')
+                ->where('status_tanah', 'tanah_proyek')
+                ->group_by('tbl_proses_induk.id')
+                ->get();
+
+            // ->get('tbl_proses_induk');
         } else {
-            $data = $this->db->select('id, no_terbit_shgb, luas_terbit')->where('status_induk', 'terbit')->where('status_tanah', 'tanah_proyek')->get('tbl_proses_induk');
+            $data = $this->db->select('
+            tbl_proses_induk.id, 
+            tbl_proses_induk.no_terbit_shgb, 
+            tbl_proses_induk.luas_terbit, 
+            master_proyek.nama_proyek
+            ')
+                ->from('tbl_proses_induk')
+                ->join('sub_proses_induk', 'tbl_proses_induk.id = sub_proses_induk.induk_id')
+                ->join('master_tanah', 'sub_proses_induk.tanah_id = master_tanah.id')
+                ->join('master_proyek', 'master_tanah.proyek_id = master_proyek.id')
+
+                ->where('status_induk', 'terbit')
+                ->where('status_tanah', 'tanah_proyek')
+                ->group_by('tbl_proses_induk.id')
+                ->get();
         }
 
         return $data;
@@ -1312,14 +1343,20 @@ class Laporan_model extends CI_Model
             tbl_splitsing.*,
             tbl_proses_induk.luas_terbit AS luas_induk,
             tbl_proses_induk.no_terbit_shgb,
-            tbl_proses_induk.sisa_induk AS sisa_from_induk
+            tbl_proses_induk.sisa_induk AS sisa_from_induk,
+            master_proyek.nama_proyek
         ')
             ->from('tbl_splitsing')
-            ->join('tbl_proses_induk', 'tbl_splitsing.induk_id = tbl_proses_induk.id');
+            ->join('tbl_proses_induk', 'tbl_splitsing.induk_id = tbl_proses_induk.id')
+            ->join('sub_proses_induk', 'tbl_proses_induk.id = sub_proses_induk.induk_id')
+            ->join('master_tanah', 'sub_proses_induk.tanah_id = master_tanah.id')
+            ->join('master_proyek', 'master_tanah.proyek_id = master_proyek.id')
+        ;
 
         if ($id) {
             $this->db->where('tbl_splitsing.id', $id);
         }
+        $this->db->group_by('tbl_splitsing.id');
 
         $data = $this->db->get();
         return $data;
@@ -1465,6 +1502,33 @@ class Laporan_model extends CI_Model
         if ($perum) {
             $this->db->where('master_proyek.id', $perum);
         }
+        $data = $this->db->get();
+        return $data;
+    }
+
+    public function get_detail_data_splitsing($id)
+    {
+        $this->db->select('
+            tbl_splitsing.*,
+            sub_splitsing.*,
+            tbl_proses_induk.luas_terbit AS luas_induk,
+            tbl_proses_induk.no_terbit_shgb AS no_induk,
+            tbl_proses_induk.sisa_induk AS sisa_from_induk,
+            master_proyek.nama_proyek
+        ')
+            ->from('tbl_splitsing')
+            ->join('sub_splitsing', 'tbl_splitsing.id = sub_splitsing.splitsing_id')
+            ->join('tbl_proses_induk', 'tbl_splitsing.induk_id = tbl_proses_induk.id')
+            ->join('sub_proses_induk', 'tbl_proses_induk.id = sub_proses_induk.induk_id')
+            ->join('master_tanah', 'sub_proses_induk.tanah_id = master_tanah.id')
+            ->join('master_proyek', 'master_tanah.proyek_id = master_proyek.id')
+        ;
+
+        if ($id) {
+            $this->db->where('tbl_splitsing.id', $id);
+        }
+        $this->db->group_by('sub_splitsing.id');
+
         $data = $this->db->get();
         return $data;
     }
