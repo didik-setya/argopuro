@@ -1584,6 +1584,48 @@ class Ajax_laporan extends CI_Controller
                     $tgl_terbit = tgl_indo($ds->tgl_terbit);
                     $batas_hgb = tgl_indo($ds->masa_berlaku);
 
+                    if ($ds->status == 'terbit') {
+                        $get_tgl_terbit_split = date_create($ds->tgl_terbit);
+                        $tgl_terbit_split = date_format($get_tgl_terbit_split, 'Y');
+                        $now_year = date('Y');
+
+
+                        if ($tgl_terbit_split >= $now_year) {
+                            $show_lastyear = '<td></td><td></td>';
+                            $show_thisyear = '<td>1</td><td>1</td>';
+                            $total_terbit = '<td>1</td><td>1</td>';
+
+
+                            $belum_terbit_split = '<td></td><td></td> <td></td><td></td> <td></td><td></td>';
+                            $terbit_stok = $show_lastyear . $show_thisyear . $total_terbit;
+                        } else {
+                            $show_lastyear = '<td>1</td><td>1</td>';
+                            $show_thisyear = '<td></td><td></td>';
+                            $total_terbit = '<td>1</td><td>1</td>';
+
+
+                            $belum_terbit_split = '<td></td><td></td> <td></td><td></td> <td></td><td></td>';
+                            $terbit_stok = $show_lastyear . $show_thisyear . $total_terbit;
+                        }
+                    } else if ($ds->status == 'belum proses') {
+                        $belum_proses = '<td>1</td><td>1</td>';
+                        $proses = '<td></td><td></td>';
+                        $total_belum_terbit = '<td>1</td><td>1</td>';
+
+                        $belum_terbit_split = $belum_proses . $proses . $total_belum_terbit;
+                        $terbit_stok = '<td></td><td></td> <td></td><td></td> <td></td><td></td>';
+                    } else if ($ds->status == 'proses') {
+                        $belum_proses = '<td></td><td></td>';
+                        $proses = '<td>1</td><td>1</td>';
+                        $total_belum_terbit = '<td>1</td><td>1</td>';
+
+                        $belum_terbit_split = $belum_proses . $proses . $total_belum_terbit;
+                        $terbit_stok = '<td></td><td></td> <td></td><td></td> <td></td><td></td>';
+                    }
+
+
+
+
                     $html_output .= '
                         <tr>
                             <td>' . $no . '</td>
@@ -1598,6 +1640,7 @@ class Ajax_laporan extends CI_Controller
                             <td>' . $tgl_daftar . '</td>
                             <td>' . $tgl_terbit . '</td>
                             <td>' . $batas_hgb . '</td>
+                            ' . $belum_terbit_split . $terbit_stok . '
                         </tr>
                     ';
                     $no++;

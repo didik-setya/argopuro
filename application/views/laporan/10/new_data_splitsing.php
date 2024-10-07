@@ -138,9 +138,10 @@ $this_year = date('Y');
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-success" onclick="add_new_form_split('add')"><i class="fa fa-plus"></i> Tambah Form</button>
-                    <button type="submit" class="btn btn-primary">Simpan Data</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success btn-sm" onclick="add_new_form_split('add')"><i class="fa fa-plus"></i> Form Splitsing</button>
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="add_new_form_jf('add')"><i class="fa fa-plus"></i> Form Jalan & fasos</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Simpan Data</button>
                 </div>
             </div>
         </form>
@@ -193,9 +194,11 @@ $this_year = date('Y');
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-success" onclick="add_new_form_split('edit')"><i class="fa fa-plus"></i> Tambah Form</button>
-                    <button type="Save" class="btn btn-primary">Simpan Data</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+
+                    <button type="button" class="btn btn-success btn-sm" onclick="add_new_form_split('edit')"><i class="fa fa-plus"></i> Form Splitsing</button>
+                    <button type="button" class="btn btn-outline-success btn-sm" onclick="add_new_form_jf('edit')"><i class="fa fa-plus"></i> Form Jalan & fasos</button>
+                    <button type="Save" class="btn btn-primary btn-sm">Simpan Data</button>
                 </div>
             </div>
         </form>
@@ -311,7 +314,12 @@ $this_year = date('Y');
 
 
 <script>
-    let form_splitsing = '<tr><td class="text-center"><button data-toggle="tooltip" data-placement="top" title="Hapus Data" class="btn btn-sm btn-danger delete_form"><i class="fas fa-times-circle"></i></button></td><td><input type="text" name="blok[]" id="blok" required class="form-control" placeholder="Nama blok..."></td><td><input type="number" class="form-control" name="luas_blok[]" id="luas_blok"></td><td><select name="type[]" id="type" required class="form-control"><option value="">--pilih--</option><?php foreach ($tipe_splitsing as $tp) { ?><option value="<?= $tp['value'] ?>"><?= $tp['name'] ?></option><?php } ?></select></td></tr>'
+    let form_splitsing = '<tr><td class="text-center"><button data-toggle="tooltip" data-placement="top" title="Hapus Data" class="btn btn-sm btn-danger delete_form"><i class="fas fa-times-circle"></i></button></td><td><input type="text" name="blok[]" id="blok" required class="form-control" placeholder="Nama blok..."></td><td><input type="number" class="form-control" name="luas_blok[]" id="luas_blok"></td><td><input type="hidden" name="type[]" value="sp"> Splitsing </td></tr>'
+
+    let form_jf = '<tr><td class="text-center"><button data-toggle="tooltip" data-placement="top" title="Hapus Data" class="btn btn-sm btn-danger delete_form"><i class="fas fa-times-circle"></i></button></td><td><input type="text" name="blok[]" id="blok" required class="form-control" placeholder="Nama blok..."></td><td><input type="number" class="form-control" name="luas_blok[]" id="luas_blok"></td><td><input type="hidden" name="type[]" value="jf"> Jalan & Fasos </td></tr>'
+
+
+
 
     $(document).ready(function() {
         let select = document.getElementById('select_induk');
@@ -380,6 +388,33 @@ $this_year = date('Y');
         }
     }
 
+    function add_new_form_jf(from_table) {
+        let induk = $('#select_induk').val()
+        let induk_edit = $('#induk_edit').val();
+
+        if (from_table == 'add') {
+            if (induk) {
+                $('#table_form tbody').append(form_jf)
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Pilih induk terlebih dahulu',
+                })
+            }
+        } else if (from_table == 'edit') {
+            if (induk_edit) {
+                $('#table_form_edit tbody').append(form_jf)
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Pilih induk terlebih dahulu',
+                })
+            }
+        }
+    }
+
     function get_data_for_edit(id) {
         $.ajax({
             url: '<?= base_url('ajax_laporan/act_splitsing_10') ?>',
@@ -401,15 +436,18 @@ $this_year = date('Y');
                     let i
                     for (i = 0; i < data_split.length; i++) {
                         let tipe = data_split[i].tipe;
+                        let show_tipe = ''
 
-                        show_split += '<tr><td class="text-center"><button data-toggle="tooltip" data-placement="top" title="Hapus Data" class="btn btn-sm btn-warning delete_split" type="button" data-id="' + data_split[i].id + '"><i class="fas fa-trash-alt"></i></button> <input type="hidden" name="id_splitsing[]" value="' + data_split[i].id + '"> </td><td><input type="text" name="blok_edit[]" id="blok" required class="form-control" placeholder="Nama blok..." value="' + data_split[i].blok + '"></td><td><input type="number" class="form-control" name="luas_blok_edit[]" id="luas_blok" value="' + data_split[i].luas_daftar + '"></td><td><select name="type_blok_edit[]" id="type" required class="form-control" value="' + data_split[i].tipe + '"><option value="">--pilih--</option>'
+                        if (tipe == 'jf') {
+                            show_tipe = 'Jalan & Fasos'
+                        } else if (tipe == 'sp') {
+                            show_tipe = 'Splitsing'
+                        } else {
+                            show_tipe = 'Unknow'
+                        }
 
-                        $.each(<?= json_encode($tipe_splitsing) ?>, function(index, item) {
-                            let selected = (item.value == tipe) ? ' selected' : '';
-                            show_split += '<option value="' + item.value + '"' + selected + '>' + item.name + '</option>';
-                        })
-
-                        show_split += '</select></td></tr>';
+                        show_split += '<tr><td class="text-center"><button data-toggle="tooltip" data-placement="top" title="Hapus Data" class="btn btn-sm btn-warning delete_split" type="button" data-id="' + data_split[i].id + '"><i class="fas fa-trash-alt"></i></button> <input type="hidden" name="id_splitsing[]" value="' + data_split[i].id + '"> </td><td><input type="text" name="blok_edit[]" id="blok" required class="form-control" placeholder="Nama blok..." value="' + data_split[i].blok + '"></td><td><input type="number" class="form-control" name="luas_blok_edit[]" id="luas_blok" value="' + data_split[i].luas_daftar + '"></td><td><input type="hidden" name="type_blok_edit[]" value="' + tipe + '"> ' + show_tipe + '</td></tr>';
+                        // type_blok_edit
                     }
                     $('#table_form_edit tbody').html(show_split)
 
