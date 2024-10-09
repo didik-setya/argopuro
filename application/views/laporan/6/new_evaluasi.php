@@ -39,6 +39,7 @@
 
                                             <th rowspan="2">Posisi</th>
                                             <th rowspan="2">Status</th>
+                                            <th rowspan="2">Opsi Data</th>
                                             <th rowspan="2">Ket</th>
                                         </tr>
 
@@ -216,6 +217,45 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- modal opsi data -->
+<div class="modal" id="modalOpsi" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-light">
+                <h5 class="modal-title" id="staticBackdropLabel">Opsi Data</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true" class="text-light">&times;</span>
+                </button>
+            </div>
+            <?= form_open('ajax_laporan/action_laporan_6', 'id="form_opsi"'); ?>
+            <div class="modal-body">
+                <input type="hidden" name="action" id="act_opsi" value="opsi_data">
+                <input type="hidden" name="id" id="id_opsi">
+
+                <div class="form-group">
+                    <label><b>SHGB</b></label>
+                    <input type="text" name="shgb" id="show_shgb" readonly class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label><b>Opsi Data</b></label>
+                    <select name="opsi" id="opsi_data" class="form-control" required>
+                        <option value="">--pilih--</option>
+                        <option value="shgb">SHGB</option>
+                        <option value="stok">Stok</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </div>
+            </form>
         </div>
     </div>
 </div>
@@ -492,6 +532,49 @@
             }
         })
     }
+
+    function opsi_data(id, opsi, shgb) {
+        $('#id_opsi').val(id)
+        $('#show_shgb').val(shgb)
+        $('#opsi_data').val(opsi)
+        $('#modalOpsi').modal('show')
+    }
+
+    $('#form_opsi').submit(function(e) {
+        e.preventDefault()
+        loading()
+        $.ajax({
+            url: $(this).attr('action'),
+            data: $(this).serialize(),
+            type: 'POST',
+            dataType: 'JSON',
+            success: function(d) {
+                setTimeout(() => {
+                    Swal.close()
+
+                    if (d.status == false) {
+                        error_alert(d.msg)
+                    } else {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: d.msg
+                        }).then((res) => {
+                            $('#modalOpsi').modal('hide')
+                            window.location.reload()
+                        })
+                    }
+
+                }, 200);
+            },
+            error: function(xhr, status, error) {
+                setTimeout(() => {
+                    Swal.close()
+                    error_alert(error)
+                }, 200);
+            }
+        })
+    })
 
 
 

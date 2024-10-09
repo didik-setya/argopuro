@@ -1,6 +1,7 @@
 <?php
 $tipe_splitsing = $this->config->item('type_splitsing');
 $data = $this->laporan->get_data_has_splitsing()->result();
+$data_stok = $this->laporan->get_data_stok()->result();
 $last_year = date('Y', strtotime('-1 year'));
 $this_year = date('Y');
 ?>
@@ -27,59 +28,111 @@ $this_year = date('Y');
             <div class="col-12">
                 <h3>Evaluasi Stok Kavling Splitsing</h3>
 
-                <button class="btn btn-sm btn-success mb-3" onclick="add_data()"><i class="fa fa-plus"></i> Tambah Splitsing</button>
+
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="home-tab" data-toggle="tab" data-target="#home" type="button" role="tab" aria-controls="home" aria-selected="true">Home</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="profile-tab" data-toggle="tab" data-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Stok</button>
+                    </li>
+
+                </ul>
+
+                <div class="tab-content" id="myTabContent">
+                    <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                        <div class="card">
+                            <div class="card-body">
+                                <button class="btn btn-sm btn-success mb-3" onclick="add_data()"><i class="fa fa-plus"></i> Tambah Splitsing</button>
+
+                                <table class="table table-sm table-bordered" id="main_table">
+                                    <thead>
+                                        <tr>
+                                            <th><i class="fa fa-cogs"></i></th>
+                                            <th>#</th>
+                                            <th>Perumahan</th>
+                                            <th>No. Induk</th>
+
+                                            <th>Luas Induk</th>
+                                            <th>Total Luas Splitsing</th>
+                                            <th>Sisa</th>
+
+                                            <th>No. Daftar</th>
+                                            <th>Tgl. Daftar</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php $i = 1;
+                                        foreach ($data as $d) { ?>
+                                            <tr>
+                                                <td class="text-center">
+                                                    <?php if ($d->data_locked == 1) { ?>
+                                                        <button data-toggle="tooltip" data-placement="top" title="Unlock Data" class="btn btn-sm btn-secondary" onclick="key_data('<?= $d->id ?>', '0')"><i class="fas fa-unlock"></i></button>
+                                                    <?php } else { ?>
+                                                        <div class="dropdown">
+                                                            <a class="btn btn-sm btn-secondary dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">
+                                                                <i class="fa fa-cogs"></i>
+                                                            </a>
+
+                                                            <div class="dropdown-menu">
+                                                                <a class="dropdown-item" href="#" onclick="detail_data('<?= $d->id ?>')"><i class="fas fa-search"></i> Detail</a>
+                                                                <a class="dropdown-item" href="#" onclick="edit_data('<?= $d->id ?>')"><i class="fas fa-edit"></i> Edit</a>
+                                                                <a class="dropdown-item" href="#" onclick="delete_data('<?= $d->id ?>')"><i class="fas fa-trash-alt"></i> Hapus</a>
+                                                                <a class="dropdown-item" href="#" onclick="key_data('<?= $d->id ?>', '1')"><i class="fas fa-lock"></i> Lock data</a>
+                                                            </div>
+                                                        </div>
+                                                    <?php } ?>
+                                                </td>
+                                                <td><?= $i++ ?></td>
+                                                <td><?= $d->nama_proyek ?></td>
+                                                <td><?= $d->no_terbit_shgb ?></td>
+                                                <td><?= $d->luas_induk ?></td>
+                                                <td><?= $d->total_luas_splitsing ?></td>
+                                                <td><?= $d->sisa_induk ?></td>
+                                                <td><?= $d->no_daftar ?></td>
+                                                <td><?= $d->tgl_daftar ?></td>
+                                            </tr>
+                                        <?php } ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                        <br>
+                        <table class="table table-sm table-bordered">
+                            <thead>
+                                <tr class="bg-dark text-light">
+                                    <th>#</th>
+                                    <th>SHGB</th>
+                                    <th>Luas Terbit</th>
+                                    <th>Tgl. Terbit</th>
+                                    <th>Ket</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php $i = 1;
+                                foreach ($data_stok as $ds) { ?>
+                                    <tr>
+                                        <td><?= $i++ ?></td>
+                                        <td><?= $ds->no_shgb ?></td>
+                                        <td><?= $ds->luas_terbit ?></td>
+                                        <td><?= tgl_indo($ds->tgl_terbit) ?></td>
+                                        <td><?= $ds->ket ?></td>
+                                    </tr>
+                                <?php } ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
 
-                <table class="table table-sm table-bordered" id="main_table">
-                    <thead>
-                        <tr>
-                            <th><i class="fa fa-cogs"></i></th>
-                            <th>#</th>
-                            <th>Perumahan</th>
-                            <th>No. Induk</th>
 
-                            <th>Luas Induk</th>
-                            <th>Total Luas Splitsing</th>
-                            <th>Sisa</th>
 
-                            <th>No. Daftar</th>
-                            <th>Tgl. Daftar</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php $i = 1;
-                        foreach ($data as $d) { ?>
-                            <tr>
-                                <td class="text-center">
-                                    <?php if ($d->data_locked == 1) { ?>
-                                        <button data-toggle="tooltip" data-placement="top" title="Unlock Data" class="btn btn-sm btn-secondary" onclick="key_data('<?= $d->id ?>', '0')"><i class="fas fa-unlock"></i></button>
-                                    <?php } else { ?>
-                                        <div class="dropdown">
-                                            <a class="btn btn-sm btn-secondary dropdown-toggle" href="#" role="button" data-toggle="dropdown" aria-expanded="false">
-                                                <i class="fa fa-cogs"></i>
-                                            </a>
 
-                                            <div class="dropdown-menu">
-                                                <a class="dropdown-item" href="#" onclick="detail_data('<?= $d->id ?>')"><i class="fas fa-search"></i> Detail</a>
-                                                <a class="dropdown-item" href="#" onclick="edit_data('<?= $d->id ?>')"><i class="fas fa-edit"></i> Edit</a>
-                                                <a class="dropdown-item" href="#" onclick="delete_data('<?= $d->id ?>')"><i class="fas fa-trash-alt"></i> Hapus</a>
-                                                <a class="dropdown-item" href="#" onclick="key_data('<?= $d->id ?>', '1')"><i class="fas fa-lock"></i> Lock data</a>
-                                            </div>
-                                        </div>
-                                    <?php } ?>
-                                </td>
-                                <td><?= $i++ ?></td>
-                                <td><?= $d->nama_proyek ?></td>
-                                <td><?= $d->no_terbit_shgb ?></td>
-                                <td><?= $d->luas_induk ?></td>
-                                <td><?= $d->total_luas_splitsing ?></td>
-                                <td><?= $d->sisa_induk ?></td>
-                                <td><?= $d->no_daftar ?></td>
-                                <td><?= $d->tgl_daftar ?></td>
-                            </tr>
-                        <?php } ?>
-                    </tbody>
-                </table>
+
+
+
             </div>
         </div>
     </div>
@@ -311,6 +364,7 @@ $this_year = date('Y');
         </div>
     </div>
 </div>
+
 
 
 <script>
@@ -631,6 +685,7 @@ $this_year = date('Y');
     }
 
 
+
     $('.form_act').submit(function(e) {
         e.preventDefault()
         let act = $(this).data('act')
@@ -674,6 +729,7 @@ $this_year = date('Y');
         }
 
     })
+
 
 
     function error_alert(msg) {

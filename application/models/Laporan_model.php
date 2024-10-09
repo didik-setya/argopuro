@@ -1138,6 +1138,22 @@ class Laporan_model extends CI_Model
         return $this->db->get();
     }
 
+    public function get_data_shgb_penggabungan()
+    {
+        $this->db->select('
+            tbl_penggabungan_induk.*,
+            sub_penggabungan_induk.induk_id,
+            sub_penggabungan_induk.type
+        ')
+            ->from('tbl_penggabungan_induk')
+            ->join('sub_penggabungan_induk', 'tbl_penggabungan_induk.id = sub_penggabungan_induk.penggabungan_id')
+            ->where('tbl_penggabungan_induk.opsi_data', 'shgb')
+            ->where('tbl_penggabungan_induk.status_penggabungan', 'terbit')
+            ->group_by('tbl_penggabungan_induk.id');
+        $data = $this->db->get();
+        return $data;
+    }
+
     public function get_data_split_7($induk = null, $status = null)
     {
         $this->db->select('
@@ -1528,6 +1544,28 @@ class Laporan_model extends CI_Model
             $this->db->where('tbl_splitsing.id', $id);
         }
         $this->db->group_by('sub_splitsing.id');
+
+        $data = $this->db->get();
+        return $data;
+    }
+
+    public function check_data_has_penggabungan($id)
+    {
+        $this->db->select('tbl_penggabungan_induk.no_shgb')
+            ->from('tbl_penggabungan_induk')
+            ->join('sub_penggabungan_induk', 'tbl_penggabungan_induk.id = sub_penggabungan_induk.penggabungan_id')
+            ->where('sub_penggabungan_induk.induk_id', $id);
+        $data = $this->db->get();
+        return $data;
+    }
+
+    public function get_data_stok()
+    {
+        $this->db->select('tbl_penggabungan_induk.*')
+            ->from('tbl_penggabungan_induk')
+            ->join('sub_penggabungan_induk', 'tbl_penggabungan_induk.id = sub_penggabungan_induk.penggabungan_id')
+            ->where('tbl_penggabungan_induk.opsi_data', 'stok')
+            ->group_by('tbl_penggabungan_induk.id');
 
         $data = $this->db->get();
         return $data;

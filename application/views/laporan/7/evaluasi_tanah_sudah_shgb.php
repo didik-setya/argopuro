@@ -7,6 +7,7 @@ $last_year = date('Y', strtotime('-1 year'));
 $this_year = date('Y');
 
 $data = $this->laporan->get_data_shgb()->result();
+$data2 = $this->laporan->get_data_shgb_penggabungan()->result();
 
 // $last_data = $this->laporan->get_data_shgb($f_proyek, $f_status, $last_year)->result();
 // $this_data = $this->laporan->get_data_shgb($f_proyek, $f_status, null, $this_year)->result();
@@ -94,6 +95,20 @@ $data = $this->laporan->get_data_shgb()->result();
                                             <td>-</td>
                                             <td>-</td>
                                         <?php } ?>
+                                    </tr>
+                                <?php } ?>
+                                <?php foreach ($data2 as $d2) { ?>
+                                    <tr>
+                                        <td><?= $i++ ?></td>
+                                        <td><?= $d2->no_shgb ?></td>
+                                        <td>PT. GBU</td>
+                                        <td><?= $d2->luas_terbit ?></td>
+                                        <td>
+                                            <!-- batas shgb kosong (tidak ada) -->
+                                        </td>
+
+                                        <td><?= $d2->posisi ?></td>
+                                        <td>1</td>
                                     </tr>
                                 <?php } ?>
                             </tbody>

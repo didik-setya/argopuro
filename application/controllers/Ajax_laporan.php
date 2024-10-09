@@ -1069,6 +1069,13 @@ class Ajax_laporan extends CI_Controller
         $no = 1;
         foreach ($data as $d) {
             $row = [];
+
+            if ($d->status_penggabungan == 'terbit') {
+                $opsi_data = '<a href="#" class="dropdown-item" onclick="opsi_data(\'' . $d->id . '\', \'' . $d->opsi_data . '\', \'' . $d->no_shgb . '\')">Opsi Data</a>';
+            } else {
+                $opsi_data = '';
+            }
+
             $row[] = '
                 <div class="dropdown">
                     <button class="btn btn-secondary btn-sm dropdown-toggle btn-action" type="button" data-toggle="dropdown" aria-expanded="false">
@@ -1078,6 +1085,7 @@ class Ajax_laporan extends CI_Controller
                         <a class="dropdown-item" href="#" onclick="detail_data(\'' . $d->id . '\')" >Detail</a>
                         <a class="dropdown-item" href="#" onclick="edit_data(\'' . $d->id . '\')">Edit</a>
                         <a class="dropdown-item" href="#" onclick="delete_data(\'' . $d->id . '\')">Hapus</a>
+                        ' . $opsi_data . '
                     </div>
                 </div>
             ';
@@ -1089,6 +1097,7 @@ class Ajax_laporan extends CI_Controller
             $row[] = tgl_indo($d->tgl_terbit);
             $row[] = $d->posisi;
             $row[] = $d->status_penggabungan;
+            $row[] = $d->opsi_data;
             $row[] = $d->ket;
             $output[] = $row;
         }
@@ -1350,6 +1359,27 @@ class Ajax_laporan extends CI_Controller
                     ];
                 }
                 echo json_encode($params);
+                break;
+            case 'opsi_data':
+                $id = $this->input->post('id');
+                $opsi = $this->input->post('opsi');
+
+                $this->db->set('opsi_data', $opsi)->where('id', $id)->update('tbl_penggabungan_induk');
+                if ($this->db->affected_rows() > 0) {
+                    $params = [
+                        'status' => true,
+                        'msg' => 'Opsi data berhasil di ubah'
+                    ];
+                } else {
+                    $params = [
+                        'status' => false,
+                        'msg' => 'Opsi data gagal di ubah'
+                    ];
+                }
+
+                echo json_encode($params);
+                die;
+
                 break;
         }
     }
@@ -1706,7 +1736,27 @@ class Ajax_laporan extends CI_Controller
                 echo json_encode($params);
                 die;
                 break;
+            case 'opsi_data':
+                $id = $this->input->post('id');
+                $opsi = $this->input->post('opsi_data');
+                $this->db->set('opsi_data', $opsi)->where('id', $id)->update('tbl_proses_induk');
+                if ($this->db->affected_rows() > 0) {
+                    $params = [
+                        'status' => true,
+                        'msg' => 'Opsi sisa data berhasil di ubah'
+                    ];
+                } else {
+                    $params = [
+                        'status' => false,
+                        'msg' => 'Opsi sisa data gagal di ubah'
+                    ];
+                }
+                echo json_encode($params);
+                die;
+                break;
         }
     }
+
+
     //end no 10
 }
