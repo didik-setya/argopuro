@@ -534,7 +534,7 @@ class Dashboard extends CI_Controller
             'title' => 'Evaluasi Stok Kavling Splitsing',
             'user' => get_user(),
             'view' => 'laporan/10/new_data_splitsing',
-            'induk' => $this->laporan->get_data_blm_splitsing()->result()
+            'induk' => $this->db->get('master_proyek')->result()
         ];
         $this->load->view('dashboard', $data);
     }

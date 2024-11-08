@@ -43,8 +43,8 @@ $data = $this->laporan->get_data_has_splitsing()->result();
                                                         <i class="fa fa-cogs"></i>
                                                     </button>
                                                     <div class="dropdown-menu">
-                                                        <a class="dropdown-item" onclick="edit_data('<?= $d->id ?>')" href="#"><i class="fa fa-edit"></i> Edit</a>
-                                                        <a class="dropdown-item" onclick="detail_data('<?= $d->id ?>')" href="#"><i class="fas fa-search"></i> Detail</a>
+                                                        <a class="dropdown-item" onclick="edit_data('<?= $d->id_splitsing ?>')" href="#"><i class="fa fa-edit"></i> Edit</a>
+                                                        <a class="dropdown-item" onclick="detail_data('<?= $d->id_splitsing ?>')" href="#"><i class="fas fa-search"></i> Detail</a>
                                                     </div>
                                                 </div>
                                             <?php } else if ($d->data_locked == 0) { ?>
@@ -99,17 +99,25 @@ $data = $this->laporan->get_data_has_splitsing()->result();
             <input type="hidden" name="id" id="id_edit">
             <input type="hidden" name="act" id="action" value="edit">
             <div class="modal-body row px-4">
-                <div class="form-group col-md-4">
-                    <label><b>Induk</b></label>
-                    <input type="text" name="induk" id="induk_edit" readonly class="form-control">
+
+                <div class="form-group col-md-3">
+                    <label><b>Proyek</b></label>
+                    <input type="text" name="proyek" id="proyek_edit" readonly class="form-control">
                 </div>
 
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
+                    <label><b>Induk</b></label>
+                    <select name="induk" id="induk_edit" class="form-control" required>
+                        <option value="">--pilih--</option>
+                    </select>
+                </div>
+
+                <div class="form-group col-md-3">
                     <label><b>Luas</b></label>
                     <input type="text" name="lterbit" readonly id="Lterbit_edit" class="form-control">
                 </div>
 
-                <div class="form-group col-md-4">
+                <div class="form-group col-md-3">
                     <label><b>Status</b></label>
                     <select name="status" id="status_edit" class="form-control" required>
                         <option value="">--pilih--</option>
@@ -161,6 +169,8 @@ $data = $this->laporan->get_data_has_splitsing()->result();
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-outline-info" onclick="add_form_si()" id="add_si"><i class="fa fa-plus"></i> Form Sisa Induk</button>
+                <button type="button" class="btn btn-outline-success" onclick="add_form_jf()" id="add_jf"><i class="fa fa-plus"></i> Form Jalan Fasos</button>
                 <button type="submit" class="btn btn-primary">Save</button>
             </div>
         </div>
@@ -172,6 +182,10 @@ $data = $this->laporan->get_data_has_splitsing()->result();
 
 
 <script>
+    let form_jf = '<tr><td class="text-center"><button data-toggle="tooltip" data-placement="top" title="Hapus Data" class="btn btn-sm btn-danger delete_form" type="button"><i class="fas fa-times-circle"></i></button></td><td><input type="text" name="new_blok[]" id="blok" required class="form-control" placeholder="Nama blok..."></td><td><input type="hidden" name="type[]" value="jf"> Jalan & Fasos </td><td><input type="number" class="form-control" name="luas_blok[]" id="luas_blok"></td><td><input required="" type="text" name="new_luas_terbit[]" id="luas_terbit" class="form-control" value=""></td><td><input required="" type="text" name="new_shgb_split[]" id="shgb" class="form-control" value=""></td><td><textarea name="new_ket[]" id="ket" class="form-control"></textarea></td></tr>'
+
+    let form_si = '<tr><td class="text-center"><button data-toggle="tooltip" data-placement="top" title="Hapus Data" class="btn btn-sm btn-danger delete_form" type="button"><i class="fas fa-times-circle"></i></button></td><td><input type="text" name="new_blok[]" id="blok" required class="form-control" placeholder="Nama blok..."></td><td><input type="hidden" name="type[]" value="si"> Sisa Induk </td><td><input type="number" class="form-control" name="luas_blok[]" id="luas_blok"></td><td><input required="" type="text" name="new_luas_terbit[]" id="luas_terbit" class="form-control" value=""></td><td><input required="" type="text" name="new_shgb_split[]" id="shgb" class="form-control" value=""></td><td><textarea name="new_ket[]" id="ket" class="form-control"></textarea></td></tr>'
+
     $(document).ready(function() {
         $('#main_table thead tr th').addClass('text-left')
         $('#main_table').dataTable({
@@ -209,18 +223,16 @@ $data = $this->laporan->get_data_has_splitsing()->result();
             success: function(d) {
                 setTimeout(() => {
                     Swal.close()
-                    $('#modalEdit').modal('show')
                     let data = d.data
                     let split = d.splitsing
-
-                    $('#induk_edit').val(data.no_terbit_shgb)
+                    $('#induk_edit').removeAttr('readonly')
+                    $('#proyek_edit').val(data.nama_proyek)
                     $('#Lterbit_edit').val(data.luas_induk)
                     $('#status_edit').val(data.status)
                     $('#no_daftar_edit').val(data.no_daftar)
                     $('#tgl_daftar_edit').val(data.tgl_daftar)
                     $('#masa_berlaku_edit').val(split[0].masa_berlaku)
                     $('#tgl_terbit_edit').val(split[0].tgl_terbit)
-
 
                     let i
                     let html = '';
@@ -232,8 +244,10 @@ $data = $this->laporan->get_data_has_splitsing()->result();
                         let no_shgb = ''
                         if (split[i].tipe == 'sp') {
                             tipe = 'Splitsing'
-                        } else if (split[i].tipe == 'fs') {
+                        } else if (split[i].tipe == 'jf') {
                             tipe = 'Jalan & Fasos'
+                        } else if (split[i].tipe == 'si') {
+                            tipe = 'Sisa Induk'
                         } else {
                             tipe = 'Unknow'
                         }
@@ -257,8 +271,22 @@ $data = $this->laporan->get_data_has_splitsing()->result();
                     }
                     $('#table_splitsing_edit tbody').html(html)
 
+                    if (data.induk_id == '' || data.induk_id == 0) {
+                        get_data_induk(data.proyek_id, 'ok gas', data.induk_id);
+                    } else {
+                        let select = '<option value="' + data.induk_id + '">' + data.no_terbit_shgb + '</option>';
+                        $('#induk_edit').html(select)
+                        $('#induk_edit').attr('readonly', true)
+                        $('#modalEdit').modal('show')
+                    }
 
-                    console.log(d);
+                    if (data.status == 'terbit') {
+                        $('#add_si').removeClass('d-none');
+                        $('#add_jf').removeClass('d-none');
+                    } else {
+                        $('#add_si').addClass('d-none');
+                        $('#add_jf').addClass('d-none');
+                    }
                 }, 200);
             },
             error: function(xhr, status, error) {
@@ -294,6 +322,68 @@ $data = $this->laporan->get_data_has_splitsing()->result();
             }
         })
     }
+
+    function get_data_induk(id, modal = null, checked = null) {
+        $.ajax({
+            url: '<?= base_url('ajax_laporan/act_evaluasi_splitsing') ?>',
+            data: {
+                id: id,
+                act: 'get_data_induk'
+            },
+            type: 'POST',
+            dataType: 'json',
+            error: function(xhr, status, error) {
+                setTimeout(() => {
+                    Swal.close()
+                    error_alert(error)
+                }, 200);
+            },
+            success: function(d) {
+                let data_induk = d.data;
+                let html = '<option value="">--pilih--</option>';
+                let i;
+                for (i = 0; i < data_induk.length; i++) {
+                    html += '<option data-luas="' + data_induk[i].luas_terbit + '" value="' + data_induk[i].id + '">' + data_induk[i].no_terbit_shgb + '</option>';
+                }
+
+
+                $('#induk_edit').html(html)
+                if (modal) {
+                    setTimeout(() => {
+                        $('#modalEdit').modal('show')
+                    }, 50);
+                }
+
+                if (checked && checked > 0) {
+                    setTimeout(() => {
+                        $('#induk_edit').val(checked)
+                    }, 100);
+                }
+            }
+        })
+    }
+
+    $('#induk_edit').change(function() {
+        let selectedOption = $(this).find('option:selected');
+        var dataLuas = selectedOption.data('luas');
+        if (dataLuas) {
+            $('#Lterbit_edit').val(dataLuas)
+        } else {
+            $('#Lterbit_edit').val('')
+        }
+    })
+
+    function add_form_si() {
+        $('#table_splitsing_edit tbody').append(form_si);
+    }
+
+    function add_form_jf() {
+        $('#table_splitsing_edit tbody').append(form_jf);
+    }
+
+    $(document).on('click', '.delete_form', function() {
+        $(this).closest('tr').remove();
+    })
 
 
 
