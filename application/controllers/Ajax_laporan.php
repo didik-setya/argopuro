@@ -945,26 +945,26 @@ class Ajax_laporan extends CI_Controller
                     $this->db->insert_batch('sub_splitsing', $data_new_blok);
                 }
 
-                if ($new_blok) {
-                    $jml_new_blok = count($new_blok);
-                    $data_new_blok = [];
-                    for ($a = 0; $a < $jml_new_blok; $a++) {
-                        $row = [
-                            'splitsing_id' => $id,
-                            'blok' => $new_blok[$a],
-                            'luas_daftar' => $luas_daftar[$a],
-                            'luas_terbit' => $new_luas_terbit[$a],
-                            'no_shgb' => $new_no_shgb[$a],
-                            'masa_berlaku' => $masa_berlaku,
-                            'tgl_terbit' => $tgl_terbit,
-                            'keterangan' => $new_ket[$a],
-                            'created_at' => date('Y-m-d H:i:s'),
-                            'tipe' => $tipe_split[$a]
-                        ];
-                        $data_new_blok[] = $row;
-                    }
-                    $this->db->insert_batch('sub_splitsing', $data_new_blok);
-                }
+                // if ($new_blok) {
+                //     $jml_new_blok = count($new_blok);
+                //     $data_new_blok = [];
+                //     for ($a = 0; $a < $jml_new_blok; $a++) {
+                //         $row = [
+                //             'splitsing_id' => $id,
+                //             'blok' => $new_blok[$a],
+                //             'luas_daftar' => $luas_daftar[$a],
+                //             'luas_terbit' => $new_luas_terbit[$a],
+                //             'no_shgb' => $new_no_shgb[$a],
+                //             'masa_berlaku' => $masa_berlaku,
+                //             'tgl_terbit' => $tgl_terbit,
+                //             'keterangan' => $new_ket[$a],
+                //             'created_at' => date('Y-m-d H:i:s'),
+                //             'tipe' => $tipe_split[$a]
+                //         ];
+                //         $data_new_blok[] = $row;
+                //     }
+                //     $this->db->insert_batch('sub_splitsing', $data_new_blok);
+                // }
 
 
                 if ($this->db->trans_status() === FALSE) {

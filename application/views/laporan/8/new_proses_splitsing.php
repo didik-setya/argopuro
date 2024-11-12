@@ -13,6 +13,7 @@ $data = $this->laporan->get_data_has_splitsing()->result();
                             <thead>
                                 <tr class="bg-dark text-light">
                                     <th>#</th>
+                                    <th>Proyek</th>
                                     <th>Induk</th>
                                     <th>Luas Induk</th>
                                     <th>Total Luas Splitsing</th>
@@ -29,6 +30,7 @@ $data = $this->laporan->get_data_has_splitsing()->result();
                                 ?>
                                     <tr>
                                         <td><?= $i++ ?></td>
+                                        <td><?= $d->nama_proyek ?></td>
                                         <td><?= $d->no_terbit_shgb ?></td>
                                         <td><?= $d->luas_induk ?></td>
                                         <td><?= $d->total_luas_splitsing ?></td>

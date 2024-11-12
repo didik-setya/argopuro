@@ -41,7 +41,7 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
                         <button class="nav-link" id="profile-tab" data-toggle="tab" data-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">Jalan & Fasos</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="abs" data-toggle="tab" data-target="#abs-c" type="button" role="tab" aria-controls="abs-c" aria-selected="false">Sisa Splitsing</button>
+                        <button class="nav-link" id="abs" data-toggle="tab" data-target="#abs-c" type="button" role="tab" aria-controls="abs-c" aria-selected="false">Sisa Induk</button>
                     </li>
 
                 </ul>
@@ -309,16 +309,16 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
                                     </thead>
                                     <tbody>
                                         <?php $no = 1;
-                                        foreach ($data_jalan_fasos as $ds) {
-                                            $l_teknik = $ds->luas_daftar;
-                                            $l_terbit = $ds->luas_terbit;
+                                        foreach ($data_jalan_fasos as $jf) {
+                                            $l_teknik = $jf->luas_daftar;
+                                            $l_terbit = $jf->luas_terbit;
                                             $l_selisih = $l_teknik - $l_terbit;
-                                            $tgl_daftar = tgl_indo($ds->tgl_daftar);
-                                            $tgl_terbit = tgl_indo($ds->tgl_terbit);
-                                            $batas_hgb = tgl_indo($ds->masa_berlaku);
+                                            $tgl_daftar = tgl_indo($jf->tgl_daftar);
+                                            $tgl_terbit = tgl_indo($jf->tgl_terbit);
+                                            $batas_hgb = tgl_indo($jf->masa_berlaku);
 
-                                            if ($ds->status == 'terbit') {
-                                                $get_tgl_terbit_split = date_create($ds->tgl_terbit);
+                                            if ($jf->status == 'terbit') {
+                                                $get_tgl_terbit_split = date_create($jf->tgl_terbit);
                                                 $tgl_terbit_split = date_format($get_tgl_terbit_split, 'Y');
 
                                                 if ($tgl_terbit_split >= $this_year) {
@@ -338,14 +338,14 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
                                                     $belum_terbit_split = '<td></td><td></td> <td></td><td></td> <td></td><td></td>';
                                                     $terbit_stok = $show_lastyear . $show_thisyear . $total_terbit;
                                                 }
-                                            } else if ($ds->status == 'belum proses') {
+                                            } else if ($jf->status == 'belum proses') {
                                                 $belum_proses = '<td>1</td><td>1</td>';
                                                 $proses = '<td></td><td></td>';
                                                 $total_belum_terbit = '<td>1</td><td>1</td>';
 
                                                 $belum_terbit_split = $belum_proses . $proses . $total_belum_terbit;
                                                 $terbit_stok = '<td></td><td></td> <td></td><td></td> <td></td><td></td>';
-                                            } else if ($ds->status == 'proses') {
+                                            } else if ($jf->status == 'proses') {
                                                 $belum_proses = '<td></td><td></td>';
                                                 $proses = '<td>1</td><td>1</td>';
                                                 $total_belum_terbit = '<td>1</td><td>1</td>';
@@ -357,30 +357,30 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
                                             <tr>
                                                 <!-- 37 column -->
                                                 <td>
-                                                    <?php if ($ds->data_locked == 0) { ?>
+                                                    <?php if ($jf->data_locked == 0) { ?>
                                                         <div class="btn-group">
                                                             <button type="button" class="btn btn-outline-secondary dropdown-toggle btn-sm" data-toggle="dropdown" aria-expanded="false">
                                                                 <i class="fa fa-cogs"></i>
                                                             </button>
                                                             <div class="dropdown-menu">
-                                                                <a class="dropdown-item" onclick="key_data('<?= $ds->id_splitsing ?>',1)" href="#"><i class="fas fa-lock"></i> Lock Data</a>
-                                                                <a class="dropdown-item" onclick="delete_split('<?= $ds->id_sub_splitsing ?>')" href="#"><i class="far fa-trash-alt"></i> Hapus Data</a>
+                                                                <a class="dropdown-item" onclick="key_data('<?= $jf->id_splitsing ?>',1)" href="#"><i class="fas fa-lock"></i> Lock Data</a>
+                                                                <a class="dropdown-item" onclick="delete_split('<?= $jf->id_sub_splitsing ?>')" href="#"><i class="far fa-trash-alt"></i> Hapus Data</a>
                                                             </div>
                                                         </div>
-                                                    <?php } else if ($ds->data_locked == 1) { ?>
-                                                        <button class="btn btn-sm btn-secondary" onclick="key_data('<?= $ds->id_splitsing ?>', 2)" data-toggle="tooltip" data-placement="top" data-original-title="Unlock Data" title><i class="fas fa-lock-open"></i></button>
+                                                    <?php } else if ($jf->data_locked == 1) { ?>
+                                                        <button class="btn btn-sm btn-secondary" onclick="key_data('<?= $jf->id_splitsing ?>', 2)" data-toggle="tooltip" data-placement="top" data-original-title="Unlock Data" title><i class="fas fa-lock-open"></i></button>
                                                     <?php } ?>
                                                 </td>
 
                                                 <td><?= $no++ ?></td>
-                                                <td><?= $ds->nama_proyek ?></td>
-                                                <td><?= $ds->blok ?></td>
+                                                <td><?= $jf->nama_proyek ?></td>
+                                                <td><?= $jf->blok ?></td>
                                                 <td>1</td>
                                                 <td><?= $l_teknik ?></td>
                                                 <td><?= $l_terbit ?></td>
                                                 <td><?= $l_selisih ?></td>
-                                                <td><?= $ds->no_induk ?></td>
-                                                <td><?= $ds->no_shgb ?></td>
+                                                <td><?= $jf->no_induk ?></td>
+                                                <td><?= $jf->no_shgb ?></td>
                                                 <td><?= $tgl_daftar ?></td>
                                                 <td><?= $tgl_terbit ?></td>
                                                 <td><?= $batas_hgb ?></td>
@@ -388,7 +388,7 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
                                                 <?php for ($i = 0; $i < 12; $i++) {
                                                     echo '<td></td>';
                                                 } ?>
-                                                <td><?= $ds->keterangan ?></td>
+                                                <td><?= $jf->keterangan ?></td>
                                             </tr>
                                         <?php } ?>
                                     </tbody>
@@ -483,7 +483,7 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
                                     </thead>
                                     <tbody>
                                         <?php $no = 1;
-                                        foreach ($data_jalan_fasos as $ds) {
+                                        foreach ($data_sisa_induk as $ds) {
                                             $l_teknik = $ds->luas_daftar;
                                             $l_terbit = $ds->luas_terbit;
                                             $l_selisih = $l_teknik - $l_terbit;
@@ -894,38 +894,40 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
             confirmButtonText: "Yes",
             allowOutsideClick: false,
         }).then((res) => {
-            loading_animation()
-            $.ajax({
-                url: '<?= base_url('ajax_laporan/act_splitsing_10') ?>',
-                data: {
-                    id: id,
-                    act: 'delete_split'
-                },
-                type: 'POST',
-                dataType: 'JSON',
-                success: function(d) {
-                    setTimeout(() => {
-                        Swal.close()
-                        if (d.status == false) {
-                            error_alert(d.msg)
-                        } else {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: d.msg
-                            }).then((res) => {
-                                window.location.reload()
-                            })
-                        }
-                    }, 200);
-                },
-                error: function(xhr, status, error) {
-                    setTimeout(() => {
-                        Swal.close()
-                        error_alert(error)
-                    }, 200);
-                }
-            })
+            if (res.isConfirmed) {
+                loading_animation()
+                $.ajax({
+                    url: '<?= base_url('ajax_laporan/act_splitsing_10') ?>',
+                    data: {
+                        id: id,
+                        act: 'delete_split'
+                    },
+                    type: 'POST',
+                    dataType: 'JSON',
+                    success: function(d) {
+                        setTimeout(() => {
+                            Swal.close()
+                            if (d.status == false) {
+                                error_alert(d.msg)
+                            } else {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: d.msg
+                                }).then((res) => {
+                                    window.location.reload()
+                                })
+                            }
+                        }, 200);
+                    },
+                    error: function(xhr, status, error) {
+                        setTimeout(() => {
+                            Swal.close()
+                            error_alert(error)
+                        }, 200);
+                    }
+                })
+            }
         })
 
 
