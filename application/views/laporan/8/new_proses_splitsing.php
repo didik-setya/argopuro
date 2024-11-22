@@ -269,7 +269,7 @@ $data = $this->laporan->get_data_has_splitsing()->result();
 
 
 
-                        html += '<tr><td>' + no++ + '<input type="hidden" name="id_split[]" id="id_split" value="' + split[i].id + '"></td><td>' + show_blok + '</td><td>' + tipe + '</td><td>' + split[i].luas_daftar + '</td><td><input required type="text" name="luas_terbit[]" id="luas_terbit" class="form-control" value="' + luas_terbit + '"></td><td><input required type="text" name="shgb_split[]" id="shgb" class="form-control" value="' + no_shgb + '"></td><td><textarea name="ket[]" id="ket" class="form-control" >' + split[i].keterangan + '</textarea></td></tr>'
+                        html += '<tr><td>' + no++ + '<input type="hidden" name="id_split[]" id="id_split" value="' + split[i].id + '"></td><td>' + show_blok + '</td><td>' + tipe + '</td><td>' + split[i].luas_daftar + '</td><td><input required type="text" name="luas_terbit[]" id="luas_terbit" class="form-control" value="' + luas_terbit + '" required></td><td><input required type="text" name="shgb_split[]" id="shgb" class="form-control" value="' + no_shgb + '" required></td><td><textarea name="ket[]" id="ket" class="form-control" >' + split[i].keterangan + '</textarea></td></tr>'
                     }
                     $('#table_splitsing_edit tbody').html(html)
 
