@@ -59,7 +59,7 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
                                             <th rowspan="4">Blok</th>
                                             <th rowspan="4">Jml Kvl</th>
 
-                                            <th colspan="3">L. Tanah</th>
+                                            <th colspan="4">L. Tanah</th>
 
                                             <th rowspan="4">No. Induk</th>
                                             <th rowspan="4">No. Sert</th>
@@ -75,6 +75,7 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
                                         </tr>
 
                                         <tr>
+                                            <th rowspan="3" class="bg-secondary">Induk</th>
                                             <th rowspan="3" class="bg-secondary">Technic</th>
                                             <th rowspan="3" class="bg-secondary">Sert</th>
                                             <th rowspan="3" class="bg-secondary">Selisih</th>
@@ -134,10 +135,17 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
                                     </thead>
                                     <tbody>
                                         <?php $no = 1;
+                                        $l_selisih = 0;
                                         foreach ($data_splitsing as $ds) {
                                             $l_teknik = $ds->luas_daftar;
                                             $l_terbit = $ds->luas_terbit;
-                                            $l_selisih = $l_teknik - $l_terbit;
+                                            $l_induk = $ds->luas_induk;
+
+
+                                            // $l_selisih = $l_induk - $l_terbit;
+                                            $l_selisih += $l_terbit;
+                                            $final_selisih = $l_induk - $l_selisih;
+
                                             $tgl_daftar = tgl_indo($ds->tgl_daftar);
                                             $tgl_terbit = tgl_indo($ds->tgl_terbit);
                                             $batas_hgb = tgl_indo($ds->masa_berlaku);
@@ -190,6 +198,7 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
                                                             <div class="dropdown-menu">
                                                                 <a class="dropdown-item" onclick="key_data('<?= $ds->id_splitsing ?>',1)" href="#"><i class="fas fa-lock"></i> Lock Data</a>
                                                                 <a class="dropdown-item" onclick="delete_split('<?= $ds->id_sub_splitsing ?>')" href="#"><i class="far fa-trash-alt"></i> Hapus Data</a>
+                                                                <a class="dropdown-item" onclick="add_split('<?= $ds->id_splitsing ?>', '<?= $ds->nama_proyek ?>')" href="#"><i class="fa fa-plus"></i> Tambah Split</a>
                                                             </div>
                                                         </div>
                                                     <?php } else if ($ds->data_locked == 1) { ?>
@@ -201,9 +210,10 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
                                                 <td><?= $ds->nama_proyek ?></td>
                                                 <td><?= $ds->blok ?></td>
                                                 <td>1</td>
+                                                <td><?= $ds->luas_induk ?></td>
                                                 <td><?= $l_teknik ?></td>
                                                 <td><?= $l_terbit ?></td>
-                                                <td><?= $l_selisih ?></td>
+                                                <td><?= $final_selisih ?></td>
                                                 <td><?= $ds->no_induk ?></td>
                                                 <td><?= $ds->no_shgb ?></td>
                                                 <td><?= $tgl_daftar ?></td>
@@ -365,6 +375,7 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
                                                             <div class="dropdown-menu">
                                                                 <a class="dropdown-item" onclick="key_data('<?= $jf->id_splitsing ?>',1)" href="#"><i class="fas fa-lock"></i> Lock Data</a>
                                                                 <a class="dropdown-item" onclick="delete_split('<?= $jf->id_sub_splitsing ?>')" href="#"><i class="far fa-trash-alt"></i> Hapus Data</a>
+                                                                <a class="dropdown-item" onclick="add_split('<?= $jf->id_splitsing ?>', '<?= $jf->nama_proyek ?>')" href="#"><i class="fa fa-plus"></i> Tambah Split</a>
                                                             </div>
                                                         </div>
                                                     <?php } else if ($jf->data_locked == 1) { ?>
@@ -539,6 +550,7 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
                                                             <div class="dropdown-menu">
                                                                 <a class="dropdown-item" onclick="key_data('<?= $ds->id_splitsing ?>',1)" href="#"><i class="fas fa-lock"></i> Lock Data</a>
                                                                 <a class="dropdown-item" onclick="delete_split('<?= $ds->id_sub_splitsing ?>')" href="#"><i class="far fa-trash-alt"></i> Hapus Data</a>
+                                                                <a class="dropdown-item" onclick="add_split('<?= $ds->id_splitsing ?>', '<?= $ds->nama_proyek ?>')" href="#"><i class="fa fa-plus"></i> Tambah Split</a>
                                                             </div>
                                                         </div>
                                                     <?php } else if ($ds->data_locked == 1) { ?>
@@ -686,6 +698,58 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
 </div>
 
 
+<!-- Modal -->
+<div class="modal" id="modalAddSplit" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen modal-dialog-scrollable">
+        <form action="<?= base_url('ajax_laporan/act_splitsing_10') ?>" class="form_act" method="post" data-act="add_split">
+            <input type="hidden" name="act" class="act" value="add_split">
+            <div class="modal-content modal-fullscreen">
+                <div class="modal-header bg-dark text-light">
+                    <h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true" class="text-light">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="form-group">
+                                <label><b>Proyek</b></label>
+                                <input type="text" name="proyek" id="proyek_add_split" class="form-control" readonly>
+                                <input type="hidden" name="id_split" id="id_add_split">
+                            </div>
+                        </div>
+
+                        <div class="col-12 ">
+
+                            <table class="table table-sm table-bordered by-2 w-100" id="table_add_form">
+                                <thead>
+                                    <tr class="bg-primary text-light">
+                                        <th style="width: 5%;">#</th>
+                                        <th>Blok</th>
+                                        <th>Luas</th>
+                                        <th>Tipe</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success btn-sm" onclick="add_new_form_split('add_split')"><i class="fa fa-plus"></i> Form Splitsing</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Simpan Data</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
 
 <script>
     let form_splitsing = '<tr><td class="text-center"><button data-toggle="tooltip" data-placement="top" title="Hapus Data" class="btn btn-sm btn-danger delete_form"><i class="fas fa-times-circle"></i></button></td><td><input type="text" name="blok[]" id="blok" required class="form-control" placeholder="Nama blok..."></td><td><input type="number" class="form-control" name="luas_blok[]" id="luas_blok"></td><td><input type="hidden" name="type[]" value="sp"> Splitsing </td></tr>'
@@ -759,6 +823,8 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
                     text: 'Pilih proyek terlebih dahulu',
                 })
             }
+        } else if (from_table == 'add_split') {
+            $('#table_add_form tbody').append(form_splitsing)
         }
     }
 
@@ -1052,8 +1118,10 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
 
         let form_blok = $('#table_form tbody').html()
         let form_blok_edit = $('#table_form_edit tbody').html()
+        let add_split = $('#table_add_form tbody').html()
 
-        if (act == 'add' && form_blok == '' || act == 'edit' && form_blok_edit == '') {
+
+        if (act == 'add' && form_blok == '' || act == 'edit' && form_blok_edit == '' || act == 'add_split' && add_split == '') {
             error_alert('Harap isi splitsing')
         } else {
             loading_animation()
@@ -1090,6 +1158,14 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
 
     })
 
+
+    function add_split(id_split, proyek) {
+        $('#table_add_form tbody').html('')
+        $('#modalAddSplit').modal('show')
+        $('#modalAddSplit .modal-title').html('Tambah Split')
+        $('#proyek_add_split').val(proyek)
+        $('#id_add_split').val(id_split)
+    }
 
 
     function error_alert(msg) {

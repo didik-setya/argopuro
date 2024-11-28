@@ -1868,6 +1868,45 @@ class Ajax_laporan extends CI_Controller
                 echo json_encode($params);
                 die;
                 break;
+            case 'add_split':
+                $id_split = $this->input->post('id_split');
+                $blok = $this->input->post('blok');
+                $type = $this->input->post('type');
+                $luas_blok = $this->input->post('luas_blok');
+
+                $count_blok = count($blok);
+                $data_sub_splitsing = [];
+                for ($i = 0; $i < $count_blok; $i++) {
+                    $row = [
+                        'splitsing_id' => $id_split,
+                        'blok' => $blok[$i],
+                        'luas_daftar' => $luas_blok[$i],
+                        'tipe' => $type[$i]
+                    ];
+                    $data_sub_splitsing[] = $row;
+                }
+
+
+                $this->db->trans_begin();
+
+                $this->db->insert_batch('sub_splitsing', $data_sub_splitsing);
+
+                if ($this->db->trans_status() === FALSE) {
+                    $this->db->trans_rollback();
+                    $params = [
+                        'status' => false,
+                        'msg' => 'Splitsing gagal di tambahkan'
+                    ];
+                } else {
+                    $this->db->trans_commit();
+                    $params = [
+                        'status' => true,
+                        'msg' => 'Splitsing berhasil di tambahkan'
+                    ];
+                }
+                echo json_encode($params);
+
+                break;
         }
     }
 
