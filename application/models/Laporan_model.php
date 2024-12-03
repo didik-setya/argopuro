@@ -958,6 +958,7 @@ class Laporan_model extends CI_Model
                 ->join('master_tanah', 'sub_proses_induk.tanah_id = master_tanah.id')
                 ->join('master_proyek', 'master_tanah.proyek_id = master_proyek.id')
                 ->where('tbl_splitsing.status', 'terbit')
+                // ->where('')
                 ->group_by('sub_splitsing.id');
             if ($selected) {
                 $this->db->where_not_in('sub_splitsing.id', $selected);
@@ -1146,6 +1147,24 @@ class Laporan_model extends CI_Model
             ->where('tbl_penggabungan_induk.opsi_data', 'shgb')
             ->where('tbl_penggabungan_induk.status_penggabungan', 'terbit')
             ->group_by('tbl_penggabungan_induk.id');
+        $data = $this->db->get();
+        return $data;
+    }
+
+    public function get_jml_penggabungan($id_induk = null, $status = null)
+    {
+        $this->db->select('
+            SUM(sub_splitsing.luas_terbit) AS jml,
+            sub_penggabungan_induk.id
+        ')
+            ->from('sub_penggabungan_induk')
+            ->join('sub_splitsing', 'sub_splitsing.id = sub_penggabungan_induk.induk_id')
+            ->join('tbl_splitsing', 'sub_splitsing.splitsing_id = tbl_splitsing.id')
+            ->where('tbl_splitsing.induk_id', $id_induk);
+        if ($status) {
+            $this->db->where('tbl_splitsing.status', $status);
+        }
+        // ->gorup_by('sub_penggabungan_induk.id');
         $data = $this->db->get();
         return $data;
     }

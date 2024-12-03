@@ -134,21 +134,32 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php $no = 1;
-                                        $l_selisih = 0;
+                                        <?php
+                                        $no = 1;
+                                        $tot_luas = 0;
                                         foreach ($data_splitsing as $ds) {
                                             $l_teknik = $ds->luas_daftar;
                                             $l_terbit = $ds->luas_terbit;
                                             $l_induk = $ds->luas_induk;
 
 
-                                            // $l_selisih = $l_induk - $l_terbit;
-                                            $l_selisih += $l_terbit;
-                                            $final_selisih = $l_induk - $l_selisih;
+                                            // $tot_luas = $l_induk - $l_terbit;
+                                            $tot_luas += $l_terbit;
+                                            $final_selisih = $l_induk - $tot_luas;
+                                            $final_induk = $final_selisih + $l_terbit;
 
                                             $tgl_daftar = tgl_indo($ds->tgl_daftar);
                                             $tgl_terbit = tgl_indo($ds->tgl_terbit);
                                             $batas_hgb = tgl_indo($ds->masa_berlaku);
+
+
+
+
+                                            if ($final_induk != $l_induk) {
+                                                $show_induk = 0;
+                                            } else {
+                                                $show_induk = $final_induk;
+                                            }
 
                                             if ($ds->status == 'terbit') {
                                                 $get_tgl_terbit_split = date_create($ds->tgl_terbit);
@@ -210,9 +221,9 @@ $data_sisa_induk = $this->laporan->get_detail_data_splitsing('si')->result();
                                                 <td><?= $ds->nama_proyek ?></td>
                                                 <td><?= $ds->blok ?></td>
                                                 <td>1</td>
-                                                <td><?= $ds->luas_induk ?></td>
+                                                <td><?= $final_induk ?> (<?= $ds->luas_induk ?> / <?= $show_induk ?>)</td>
                                                 <td><?= $l_teknik ?></td>
-                                                <td><?= $l_terbit ?></td>
+                                                <td><?= $l_terbit ?> (<?= $tot_luas ?>) </td>
                                                 <td><?= $final_selisih ?></td>
                                                 <td><?= $ds->no_induk ?></td>
                                                 <td><?= $ds->no_shgb ?></td>
