@@ -1,5 +1,7 @@
 <?php
-$data = $this->laporan->get_data_has_splitsing()->result();
+$data = $this->laporan->get_data_has_splitsing(null, 'induk')->result();
+$data2 = $this->laporan->get_data_has_splitsing(null, 'penggabungan')->result();
+
 ?>
 <section class="content-header">
     <div class="container-fluid">
@@ -45,7 +47,7 @@ $data = $this->laporan->get_data_has_splitsing()->result();
                                                         <i class="fa fa-cogs"></i>
                                                     </button>
                                                     <div class="dropdown-menu">
-                                                        <a class="dropdown-item" onclick="edit_data('<?= $d->id_splitsing ?>')" href="#"><i class="fa fa-edit"></i> Edit</a>
+                                                        <a class="dropdown-item" onclick="edit_data('<?= $d->id_splitsing ?>',  '<?= $d->sumber_induk ?>')" href="#"><i class="fa fa-edit"></i> Edit</a>
                                                         <a class="dropdown-item" onclick="detail_data('<?= $d->id_splitsing ?>')" href="#"><i class="fas fa-search"></i> Detail</a>
                                                     </div>
                                                 </div>
@@ -54,7 +56,39 @@ $data = $this->laporan->get_data_has_splitsing()->result();
                                             <?php } ?>
                                         </td>
                                     </tr>
+                                <?php } ?>
 
+
+                                <?php
+                                foreach ($data2 as $d) {
+                                    $sisa_induk = $d->luas_induk - $d->total_luas_splitsing;
+                                ?>
+                                    <tr>
+                                        <td><?= $i++ ?></td>
+                                        <td><?= $d->nama_proyek ?></td>
+                                        <td><?= $d->no_terbit_shgb ?></td>
+                                        <td><?= $d->luas_induk ?></td>
+                                        <td><?= $d->total_luas_splitsing ?></td>
+                                        <td><?= $sisa_induk ?></td>
+                                        <td><?= $d->no_daftar ?></td>
+                                        <td><?= tgl_indo($d->tgl_daftar) ?></td>
+                                        <td><?= $d->status ?></td>
+                                        <td>
+                                            <?php if ($d->data_locked == 1) { ?>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
+                                                        <i class="fa fa-cogs"></i>
+                                                    </button>
+                                                    <div class="dropdown-menu">
+                                                        <a class="dropdown-item" onclick="edit_data('<?= $d->id_splitsing ?>', '<?= $d->sumber_induk ?>')" href="#"><i class="fa fa-edit"></i> Edit</a>
+                                                        <a class="dropdown-item" onclick="detail_data('<?= $d->id_splitsing ?>')" href="#"><i class="fas fa-search"></i> Detail</a>
+                                                    </div>
+                                                </div>
+                                            <?php } else if ($d->data_locked == 0) { ?>
+                                                <button disabled class="btn btn-sm btn-secondary"><i class="fa fa-cogs"></i></button>
+                                            <?php } ?>
+                                        </td>
+                                    </tr>
                                 <?php } ?>
                             </tbody>
                         </table>
@@ -112,6 +146,7 @@ $data = $this->laporan->get_data_has_splitsing()->result();
                     <select name="induk" id="induk_edit" class="form-control" required>
                         <option value="">--pilih--</option>
                     </select>
+                    <input type="hidden" name="source" id="source_induk" value="">
                 </div>
 
                 <div class="form-group col-md-3">
@@ -197,7 +232,7 @@ $data = $this->laporan->get_data_has_splitsing()->result();
         })
     })
 
-    function edit_data(id) {
+    function edit_data(id, source) {
         $('#id_edit').val(id)
         $('#induk_edit').val('')
         $('#Lterbit_edit').val('')
@@ -209,16 +244,17 @@ $data = $this->laporan->get_data_has_splitsing()->result();
         $('#table_splitsing_edit tbody').html('')
 
 
-        get_data_for_edit(id)
+        get_data_for_edit(id, source)
     }
 
-    function get_data_for_edit(id) {
+    function get_data_for_edit(id, source) {
         loading_animation()
         $.ajax({
             url: '<?= base_url('ajax_laporan/act_evaluasi_splitsing') ?>',
             data: {
                 id: id,
-                act: 'data_edit'
+                act: 'data_edit',
+                source: source
             },
             type: 'POST',
             dataType: 'json',
@@ -233,6 +269,7 @@ $data = $this->laporan->get_data_has_splitsing()->result();
                     $('#status_edit').val(data.status)
                     $('#no_daftar_edit').val(data.no_daftar)
                     $('#tgl_daftar_edit').val(data.tgl_daftar)
+                    $('#source_induk').val(data.sumber_induk)
                     $('#masa_berlaku_edit').val(split[0].masa_berlaku)
                     $('#tgl_terbit_edit').val(split[0].tgl_terbit)
 
@@ -345,7 +382,7 @@ $data = $this->laporan->get_data_has_splitsing()->result();
                 let html = '<option value="">--pilih--</option>';
                 let i;
                 for (i = 0; i < data_induk.length; i++) {
-                    html += '<option data-luas="' + data_induk[i].luas_terbit + '" value="' + data_induk[i].id + '">' + data_induk[i].no_terbit_shgb + '</option>';
+                    html += '<option data-source="' + data_induk[i].type_source + '" data-luas="' + data_induk[i].luas_terbit + '" value="' + data_induk[i].id + '">' + data_induk[i].no_terbit_shgb + '</option>';
                 }
 
 
@@ -368,10 +405,17 @@ $data = $this->laporan->get_data_has_splitsing()->result();
     $('#induk_edit').change(function() {
         let selectedOption = $(this).find('option:selected');
         var dataLuas = selectedOption.data('luas');
+        let dataSource = selectedOption.data('source')
         if (dataLuas) {
             $('#Lterbit_edit').val(dataLuas)
         } else {
             $('#Lterbit_edit').val('')
+        }
+
+        if (dataSource) {
+            $('#source_induk').val(dataSource)
+        } else {
+            $('#source_induk').val('')
         }
     })
 

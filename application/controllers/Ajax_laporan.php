@@ -808,6 +808,7 @@ class Ajax_laporan extends CI_Controller
 
             case 'data_edit':
                 $type = $this->input->post('type');
+                $source = $this->input->post('source');
                 if ($type) {
                     $sub_splitsing = $this->db->get_where('sub_splitsing', ['splitsing_id' => $id])->result();
                     $splitsing = $this->db->get_where('tbl_splitsing', ['id' => $id])->row();
@@ -833,8 +834,13 @@ class Ajax_laporan extends CI_Controller
                         'splitsing' => $sub_splitsing
                     ];
                 } else {
-                    $data_splitsing = $this->laporan->get_data_has_splitsing($id)->row();
+                    if ($source == 'induk') {
+                        $data_splitsing = $this->laporan->get_data_has_splitsing($id, 'induk')->row();
+                    } else if ($source == 'penggabungan') {
+                        $data_splitsing = $this->laporan->get_data_has_splitsing($id, 'penggabungan')->row();
+                    }
                     $splitsing = $this->db->get_where('sub_splitsing', ['splitsing_id' => $id])->result();
+
 
                     $output = [
                         'data' => $data_splitsing,
@@ -864,15 +870,22 @@ class Ajax_laporan extends CI_Controller
                 $tgl_terbit = $this->input->post('tgl_terbit');
                 $masa_berlaku = $this->input->post('masa_berlaku');
                 $induk = $this->input->post('induk');
+                $source = $this->input->post('source');
+
 
                 $update_main_split = [
                     'status' => $this->input->post('status'),
                     'no_daftar' => $this->input->post('no_daftar'),
                     'tgl_daftar' => $this->input->post('tgl_daftar'),
-                    'induk_id' => $induk
+                    'induk_id' => $induk,
+                    'sumber_induk' => $this->input->post('source')
                 ];
 
-                $get_luas_induk = $this->db->select('luas_terbit')->from('tbl_proses_induk')->where('id', $induk)->get()->row()->luas_terbit;
+                if ($source == 'shgb') {
+                    $get_luas_induk = $this->db->select('luas_terbit')->from('tbl_proses_induk')->where('id', $induk)->get()->row()->luas_terbit;
+                } else if ($source == 'penggabungan') {
+                    $get_luas_induk = $this->db->select('luas_terbit')->from('tbl_penggabungan_induk')->where('id', $induk)->get()->row()->luas_terbit;
+                }
                 $get_luas_splitsing = $this->db->select('SUM(luas_daftar) AS luas')->from('sub_splitsing')->where('splitsing_id', $id)->get()->row()->luas;
 
                 $luas_new_blok = 0;
@@ -940,7 +953,9 @@ class Ajax_laporan extends CI_Controller
                     $this->db->where('id', $id_update)->update('sub_splitsing', $update_split);
                 }
                 $this->db->where('id', $id)->update('tbl_splitsing', $update_main_split);
-                $this->db->set('sisa_induk', $sisa_split)->where('id', $induk)->update('tbl_proses_induk');
+                if ($source == 'shgb') {
+                    $this->db->set('sisa_induk', $sisa_split)->where('id', $induk)->update('tbl_proses_induk');
+                }
                 if ($new_blok) {
                     $this->db->insert_batch('sub_splitsing', $data_new_blok);
                 }
@@ -988,7 +1003,8 @@ class Ajax_laporan extends CI_Controller
                 die;
                 break;
             case 'get_data_induk':
-                $get_induk_has_selected = $this->db->group_by('induk_id')->get('tbl_splitsing')->result();
+
+                $get_induk_has_selected = $this->db->where('sumber_induk', 'induk')->group_by('induk_id')->get('tbl_splitsing')->result();
                 $induk_selected = [];
                 foreach ($get_induk_has_selected as $gi) {
                     $induk_selected[] = $gi->induk_id;
@@ -997,7 +1013,9 @@ class Ajax_laporan extends CI_Controller
                 $this->db->select('
                 tbl_proses_induk.no_terbit_shgb,
                 tbl_proses_induk.id,
-                tbl_proses_induk.luas_terbit
+                tbl_proses_induk.luas_terbit,
+                tbl_proses_induk.status_induk,
+                "induk" AS type_source 
                 ')
                     ->from('tbl_proses_induk')
                     ->join('sub_proses_induk', 'tbl_proses_induk.id = sub_proses_induk.induk_id')
@@ -1009,13 +1027,43 @@ class Ajax_laporan extends CI_Controller
                     $this->db->where_not_in('tbl_proses_induk.id', $induk_selected);
                 }
                 $this->db->group_by('tbl_proses_induk.id');
+                $data1 = $this->db->get()->result();
 
 
 
-                $data = $this->db->get()->result();
+
+                //data induk dari penggabungan
+                $get_penggabungan_has_selected = $this->db->where('sumber_induk', 'penggabungan')->group_by('induk_id')->get('tbl_splitsing')->result();
+                $penggabungan_selected = [];
+                foreach ($get_penggabungan_has_selected as $gi) {
+                    $penggabungan_selected[] = $gi->induk_id;
+                }
+
+                $this->db->select('
+                    tbl_penggabungan_induk.id,
+                    tbl_penggabungan_induk.no_shgb AS no_terbit_shgb,
+                    tbl_penggabungan_induk.luas_terbit AS luas_terbit,
+                    tbl_penggabungan_induk.opsi_data,
+                    "penggabungan" AS type_source 
+                ')
+                    ->from('tbl_penggabungan_induk')
+                    ->join('sub_penggabungan_induk', 'sub_penggabungan_induk.penggabungan_id = tbl_penggabungan_induk.id')
+                    ->join('sub_splitsing', 'sub_splitsing.id = sub_penggabungan_induk.induk_id')
+                    ->join('tbl_splitsing', 'tbl_splitsing.id = sub_splitsing.splitsing_id')
+                    ->where('tbl_penggabungan_induk.status_penggabungan', 'terbit')
+                    ->where('tbl_penggabungan_induk.opsi_data', 'shgb')
+                    ->where('tbl_splitsing.proyek_id', $id);
+                if ($penggabungan_selected) {
+                    $this->db->where_not_in('tbl_penggabungan_induk.id', $penggabungan_selected);
+                }
+                $this->db->group_by('tbl_penggabungan_induk.id');
+                $data2 = $this->db->get()->result();
+                $data = array_merge($data1, $data2);
+
+
                 $output = [
                     'status' => true,
-                    'data' => $data
+                    'data' => $data,
                 ];
                 echo json_encode($output);
                 break;

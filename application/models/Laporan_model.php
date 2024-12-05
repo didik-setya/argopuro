@@ -1140,7 +1140,7 @@ class Laporan_model extends CI_Model
         $this->db->select('
             tbl_penggabungan_induk.*,
             sub_penggabungan_induk.induk_id,
-            sub_penggabungan_induk.type
+            sub_penggabungan_induk.type,
         ')
             ->from('tbl_penggabungan_induk')
             ->join('sub_penggabungan_induk', 'tbl_penggabungan_induk.id = sub_penggabungan_induk.penggabungan_id')
@@ -1151,7 +1151,7 @@ class Laporan_model extends CI_Model
         return $data;
     }
 
-    public function get_jml_penggabungan($id_induk = null, $status = null)
+    public function get_jml_penggabungan($id_induk = null, $status = null, $type = null)
     {
         $this->db->select('
             SUM(sub_splitsing.luas_terbit) AS jml,
@@ -1164,12 +1164,16 @@ class Laporan_model extends CI_Model
         if ($status) {
             $this->db->where('tbl_splitsing.status', $status);
         }
+
+        if ($type) {
+            $this->db->where('tbl_splitsing.sumber_induk', $type);
+        }
         // ->gorup_by('sub_penggabungan_induk.id');
         $data = $this->db->get();
         return $data;
     }
 
-    public function get_data_split_7($induk = null, $status = null)
+    public function get_data_split_7($induk = null, $status = null, $type = null)
     {
         $this->db->select('
             tbl_splitsing.*,
@@ -1186,11 +1190,15 @@ class Laporan_model extends CI_Model
             $this->db->where('tbl_splitsing.status', $status);
         }
 
+        if ($type) {
+            $this->db->where('tbl_splitsing.sumber_induk', $type);
+        }
+
         $data = $this->db->get();
         return $data;
     }
 
-    public function count_splitsing_7($induk = null, $status = null)
+    public function count_splitsing_7($induk = null, $status = null, $type = null)
     {
         $this->db->select('SUM(total_luas_splitsing) AS luas_splitsing')
             ->from('tbl_splitsing');
@@ -1201,6 +1209,10 @@ class Laporan_model extends CI_Model
 
         if ($status) {
             $this->db->where('tbl_splitsing.status', $status);
+        }
+
+        if ($type) {
+            $this->db->where('tbl_splitsing.sumber_induk', $type);
         }
 
         $data = $this->db->get();
@@ -1368,27 +1380,55 @@ class Laporan_model extends CI_Model
     }
 
 
-    public function get_data_has_splitsing($id = null)
+    public function get_data_has_splitsing($id = null, $type = null)
     {
-        $this->db->select('
-            tbl_splitsing.*,
-            tbl_splitsing.id AS id_splitsing,
-            sub_splitsing.*,
-            master_proyek.nama_proyek,
-            tbl_proses_induk.no_terbit_shgb,
-            tbl_proses_induk.luas_terbit AS luas_induk,
-            tbl_proses_induk.sisa_induk AS sisa_from_induk
-        ')
-            ->from('tbl_splitsing')
-            ->join('sub_splitsing', 'tbl_splitsing.id = sub_splitsing.splitsing_id')
-            ->join('master_proyek', 'tbl_splitsing.proyek_id = master_proyek.id')
-            ->join('tbl_proses_induk', 'tbl_splitsing.induk_id = tbl_proses_induk.id', 'left')
-        ;
 
-        if ($id) {
-            $this->db->where('tbl_splitsing.id', $id);
+        if ($type == 'induk') {
+            $this->db->select('
+                tbl_splitsing.*,
+                tbl_splitsing.id AS id_splitsing,
+                sub_splitsing.*,
+                master_proyek.nama_proyek,
+                tbl_proses_induk.no_terbit_shgb,
+                tbl_proses_induk.luas_terbit AS luas_induk,
+                tbl_proses_induk.sisa_induk AS sisa_from_induk,
+                tbl_splitsing.sumber_induk
+            ')
+                ->from('tbl_splitsing')
+                ->join('sub_splitsing', 'tbl_splitsing.id = sub_splitsing.splitsing_id')
+                ->join('master_proyek', 'tbl_splitsing.proyek_id = master_proyek.id')
+                ->join('tbl_proses_induk', 'tbl_splitsing.induk_id = tbl_proses_induk.id', 'left')
+                ->where('tbl_splitsing.sumber_induk', 'induk')
+            ;
+
+            if ($id) {
+                $this->db->where('tbl_splitsing.id', $id);
+            }
+            $this->db->group_by('tbl_splitsing.id');
+        } else if ($type == 'penggabungan') {
+            $this->db->select('
+                tbl_splitsing.*,
+                tbl_splitsing.id AS id_splitsing,
+                sub_splitsing.*,
+                master_proyek.nama_proyek,
+                tbl_penggabungan_induk.no_shgb AS no_terbit_shgb,
+                tbl_penggabungan_induk.luas_terbit AS luas_induk,
+                SUM(sub_splitsing.luas_terbit) AS luas_terbit,
+                tbl_splitsing.sumber_induk
+            ')
+                ->from('tbl_splitsing')
+                ->join('sub_splitsing', 'tbl_splitsing.id = sub_splitsing.splitsing_id')
+                ->join('master_proyek', 'tbl_splitsing.proyek_id = master_proyek.id')
+                ->join('tbl_penggabungan_induk', 'tbl_splitsing.induk_id = tbl_penggabungan_induk.id', 'left')
+                ->join('sub_penggabungan_induk', 'tbl_penggabungan_induk.id = sub_penggabungan_induk.penggabungan_id')
+                ->where('tbl_splitsing.sumber_induk', 'penggabungan')
+            ;
+
+            if ($id) {
+                $this->db->where('tbl_splitsing.id', $id);
+            }
+            $this->db->group_by('tbl_splitsing.id');
         }
-        $this->db->group_by('tbl_splitsing.id');
 
         $data = $this->db->get();
         return $data;

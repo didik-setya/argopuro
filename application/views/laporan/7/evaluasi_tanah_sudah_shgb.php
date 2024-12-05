@@ -68,7 +68,7 @@ $data2 = $this->laporan->get_data_shgb_penggabungan()->result();
                                         <td>1</td>
 
                                         <?php
-                                        $data_splitsing = $this->laporan->get_data_split_7($d->id);
+                                        $data_splitsing = $this->laporan->get_data_split_7($d->id, null, 'induk');
                                         $split_terbit = 0;
                                         if ($data_splitsing->num_rows() <= 0) {
                                         ?>
@@ -78,8 +78,8 @@ $data2 = $this->laporan->get_data_shgb_penggabungan()->result();
                                             <td>-</td>
                                         <?php } else {
                                             $data_spl = $data_splitsing->row();
-                                            $split_proses = $this->laporan->count_splitsing_7($d->id, 'proses')->row()->luas_splitsing;
-                                            $split_terbit = $this->laporan->count_splitsing_7($d->id, 'terbit')->row()->luas_splitsing;
+                                            $split_proses = $this->laporan->count_splitsing_7($d->id, 'proses', 'induk')->row()->luas_splitsing;
+                                            $split_terbit = $this->laporan->count_splitsing_7($d->id, 'terbit', 'induk')->row()->luas_splitsing;
                                         ?>
                                             <td><?= $data_splitsing->num_rows() ?></td>
                                             <td><?= $d->luas_terbit ?></td>
@@ -89,8 +89,8 @@ $data2 = $this->laporan->get_data_shgb_penggabungan()->result();
 
 
                                         <?php
-                                        $jml_penggabungan = $this->laporan->get_jml_penggabungan($d->id)->num_rows();
-                                        $l_penggabungan = $this->laporan->get_jml_penggabungan($d->id)->row()->jml;
+                                        $jml_penggabungan = $this->laporan->get_jml_penggabungan($d->id, null, 'induk')->num_rows();
+                                        $l_penggabungan = $this->laporan->get_jml_penggabungan($d->id, null, 'induk')->row()->jml;
                                         if ($l_penggabungan || $l_penggabungan > 0) {
                                             echo '
                                                 <td>' . $jml_penggabungan . '</td>
@@ -108,7 +108,7 @@ $data2 = $this->laporan->get_data_shgb_penggabungan()->result();
                                         <td>1</td>
 
                                         <?php
-                                        $get_penggabungan_terbit = $this->laporan->get_jml_penggabungan($d->id, 'terbit')->row()->jml;
+                                        $get_penggabungan_terbit = $this->laporan->get_jml_penggabungan($d->id, 'terbit', 'induk')->row()->jml;
                                         $l_penggabungan_terbit = 0;
                                         if ($get_penggabungan_terbit != '' || $get_penggabungan_terbit != null) {
                                             $l_penggabungan_terbit = $get_penggabungan_terbit;
@@ -126,7 +126,7 @@ $data2 = $this->laporan->get_data_shgb_penggabungan()->result();
                                 <?php } ?>
                                 <?php foreach ($data2 as $d2) { ?>
                                     <tr>
-                                        <td><?= $i++ ?>2</td>
+                                        <td><?= $i++ ?></td>
                                         <td><?= $d2->no_shgb ?></td>
                                         <td>PT. GBU</td>
                                         <td><?= $d2->luas_terbit ?></td>
@@ -136,6 +136,63 @@ $data2 = $this->laporan->get_data_shgb_penggabungan()->result();
 
                                         <td><?= $d2->posisi ?></td>
                                         <td>1</td>
+
+
+                                        <?php
+                                        $data_splitsing = $this->laporan->get_data_split_7($d2->id, null, 'penggabungan');
+                                        $split_terbit = 0;
+                                        if ($data_splitsing->num_rows() <= 0) {
+                                        ?>
+                                            <td>-</td>
+                                            <td>-</td>
+                                            <td>-</td>
+                                            <td>-</td>
+                                        <?php } else {
+                                            $data_spl = $data_splitsing->row();
+                                            $split_proses = $this->laporan->count_splitsing_7($d2->id, 'proses', 'penggabungan')->row()->luas_splitsing;
+                                            $split_terbit = $this->laporan->count_splitsing_7($d2->id, 'terbit', 'penggabungan')->row()->luas_splitsing;
+                                        ?>
+                                            <td><?= $data_splitsing->num_rows() ?></td>
+                                            <td><?= $d2->luas_terbit ?></td>
+                                            <td><?= $split_proses ?></td>
+                                            <td><?= $split_terbit ?></td>
+                                        <?php } ?>
+
+
+                                        <?php
+                                        $jml_penggabungan = $this->laporan->get_jml_penggabungan($d2->id, null, 'penggabungan')->num_rows();
+                                        $l_penggabungan = $this->laporan->get_jml_penggabungan($d2->id, null, 'penggabungan')->row()->jml;
+                                        if ($l_penggabungan || $l_penggabungan > 0) {
+                                            echo '
+                                                <td>' . $jml_penggabungan . '</td>
+                                                <td>' . $l_penggabungan . '</td>
+                                            ';
+                                        } else {
+                                            echo '
+                                                <td></td>
+                                                <td></td>
+                                            ';
+                                        }
+                                        ?>
+
+                                        <td>-</td>
+                                        <td>1</td>
+
+                                        <?php
+                                        $get_penggabungan_terbit = $this->laporan->get_jml_penggabungan($d2->id, 'terbit', 'penggabungan')->row()->jml;
+                                        $l_penggabungan_terbit = 0;
+                                        if ($get_penggabungan_terbit != '' || $get_penggabungan_terbit != null) {
+                                            $l_penggabungan_terbit = $get_penggabungan_terbit;
+                                        }
+
+                                        $sisa_terbit = $d2->luas_terbit - ($split_terbit + $l_penggabungan_terbit);
+
+                                        echo '<td>' . $sisa_terbit . '</td>';
+                                        ?>
+                                        <td>-</td>
+
+
+
                                     </tr>
                                 <?php } ?>
                             </tbody>
