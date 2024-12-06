@@ -1441,6 +1441,8 @@ class Laporan_model extends CI_Model
                 ->from('tbl_splitsing')
                 ->join('sub_splitsing', 'tbl_splitsing.id = sub_splitsing.splitsing_id')
                 ->join('master_proyek', 'tbl_splitsing.proyek_id = master_proyek.id')
+                ->where('tbl_splitsing.sumber_induk', null )
+                ->or_where('tbl_splitsing.sumber_induk', '')
             ;
 
             if ($id) {
