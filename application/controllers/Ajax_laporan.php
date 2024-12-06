@@ -883,7 +883,7 @@ class Ajax_laporan extends CI_Controller
                     'sumber_induk' => $this->input->post('source')
                 ];
 
-                if ($source == 'shgb') {
+                if ($source == 'induk') {
                     $get_luas_induk = $this->db->select('luas_terbit')->from('tbl_proses_induk')->where('id', $induk)->get()->row()->luas_terbit;
                 } else if ($source == 'penggabungan') {
                     $get_luas_induk = $this->db->select('luas_terbit')->from('tbl_penggabungan_induk')->where('id', $induk)->get()->row()->luas_terbit;
