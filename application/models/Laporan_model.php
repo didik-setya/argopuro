@@ -1395,8 +1395,8 @@ class Laporan_model extends CI_Model
                 tbl_splitsing.sumber_induk
             ')
                 ->from('tbl_splitsing')
-                ->join('sub_splitsing', 'tbl_splitsing.id = sub_splitsing.splitsing_id')
-                ->join('master_proyek', 'tbl_splitsing.proyek_id = master_proyek.id')
+                ->join('sub_splitsing', 'tbl_splitsing.id = sub_splitsing.splitsing_id', 'left')
+                ->join('master_proyek', 'tbl_splitsing.proyek_id = master_proyek.id', 'left')
                 ->join('tbl_proses_induk', 'tbl_splitsing.induk_id = tbl_proses_induk.id', 'left')
                 ->where('tbl_splitsing.sumber_induk', 'induk')
             ;
@@ -1422,6 +1422,25 @@ class Laporan_model extends CI_Model
                 ->join('tbl_penggabungan_induk', 'tbl_splitsing.induk_id = tbl_penggabungan_induk.id', 'left')
                 ->join('sub_penggabungan_induk', 'tbl_penggabungan_induk.id = sub_penggabungan_induk.penggabungan_id')
                 ->where('tbl_splitsing.sumber_induk', 'penggabungan')
+            ;
+
+            if ($id) {
+                $this->db->where('tbl_splitsing.id', $id);
+            }
+            $this->db->group_by('tbl_splitsing.id');
+        } else {
+            $this->db->select('
+                tbl_splitsing.*,
+                tbl_splitsing.id AS id_splitsing,
+                sub_splitsing.*,
+                master_proyek.nama_proyek,
+                "-" AS no_terbit_shgb,
+                "-" AS luas_induk,
+                "-" AS sisa_from_induk
+            ')
+                ->from('tbl_splitsing')
+                ->join('sub_splitsing', 'tbl_splitsing.id = sub_splitsing.splitsing_id')
+                ->join('master_proyek', 'tbl_splitsing.proyek_id = master_proyek.id')
             ;
 
             if ($id) {

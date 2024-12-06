@@ -1,6 +1,7 @@
 <?php
 $data = $this->laporan->get_data_has_splitsing(null, 'induk')->result();
 $data2 = $this->laporan->get_data_has_splitsing(null, 'penggabungan')->result();
+$data0 = $this->laporan->get_data_has_splitsing()->result();
 
 ?>
 <section class="content-header">
@@ -81,6 +82,38 @@ $data2 = $this->laporan->get_data_has_splitsing(null, 'penggabungan')->result();
                                                     </button>
                                                     <div class="dropdown-menu">
                                                         <a class="dropdown-item" onclick="edit_data('<?= $d->id_splitsing ?>', '<?= $d->sumber_induk ?>')" href="#"><i class="fa fa-edit"></i> Edit</a>
+                                                        <a class="dropdown-item" onclick="detail_data('<?= $d->id_splitsing ?>')" href="#"><i class="fas fa-search"></i> Detail</a>
+                                                    </div>
+                                                </div>
+                                            <?php } else if ($d->data_locked == 0) { ?>
+                                                <button disabled class="btn btn-sm btn-secondary"><i class="fa fa-cogs"></i></button>
+                                            <?php } ?>
+                                        </td>
+                                    </tr>
+                                <?php } ?>
+
+
+                                <?php
+                                foreach ($data0 as $d) {
+                                ?>
+                                    <tr>
+                                        <td><?= $i++ ?></td>
+                                        <td><?= $d->nama_proyek ?></td>
+                                        <td><?= $d->no_terbit_shgb ?></td>
+                                        <td><?= $d->luas_induk ?></td>
+                                        <td><?= $d->total_luas_splitsing ?></td>
+                                        <td><?= $d->sisa_from_induk ?></td>
+                                        <td><?= $d->no_daftar ?></td>
+                                        <td><?= tgl_indo($d->tgl_daftar) ?></td>
+                                        <td><?= $d->status ?></td>
+                                        <td>
+                                            <?php if ($d->data_locked == 1) { ?>
+                                                <div class="dropdown">
+                                                    <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" data-toggle="dropdown" aria-expanded="false">
+                                                        <i class="fa fa-cogs"></i>
+                                                    </button>
+                                                    <div class="dropdown-menu">
+                                                        <a class="dropdown-item" onclick="edit_data('<?= $d->id_splitsing ?>',  '<?= $d->sumber_induk ?>')" href="#"><i class="fa fa-edit"></i> Edit</a>
                                                         <a class="dropdown-item" onclick="detail_data('<?= $d->id_splitsing ?>')" href="#"><i class="fas fa-search"></i> Detail</a>
                                                     </div>
                                                 </div>

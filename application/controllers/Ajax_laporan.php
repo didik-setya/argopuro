@@ -838,6 +838,8 @@ class Ajax_laporan extends CI_Controller
                         $data_splitsing = $this->laporan->get_data_has_splitsing($id, 'induk')->row();
                     } else if ($source == 'penggabungan') {
                         $data_splitsing = $this->laporan->get_data_has_splitsing($id, 'penggabungan')->row();
+                    } else {
+                        $data_splitsing = $this->laporan->get_data_has_splitsing($id)->row();
                     }
                     $splitsing = $this->db->get_where('sub_splitsing', ['splitsing_id' => $id])->result();
 
